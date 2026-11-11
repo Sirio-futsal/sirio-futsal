@@ -132,15 +132,8 @@ export async function cargarTodo(preferencias) {
     }
   }
 
-  // Cada año empieza limpio: solo se muestran partidos, tablas y playoffs de la temporada en curso (lo anterior queda guardado).
-  const anio = new Date().getFullYear()
-  const anioDePartido = (r) => {
-    if (r.fecha) return Number(String(r.fecha).slice(0, 4))
-    const yy = /^[A-Z-]{1,2}(\d{2})/.exec(r.arf_clave || '')?.[1]
-    return yy ? 2000 + Number(yy) : anio
-  }
-  const progs = (programacion || []).map(aProg).filter((f) => !f.fecha || Number(f.fecha.slice(0, 4)) === anio)
-  const partidosReales = completarPartidos(partidos.filter((r) => anioDePartido(r) === anio).map(aPartido), progs)
+  const progs = (programacion || []).map(aProg)
+  const partidosReales = completarPartidos(partidos.map(aPartido), progs)
   return {
     equipos,
     programacion: progs,
@@ -148,7 +141,7 @@ export async function cargarTodo(preferencias) {
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
     usuarios, sugerencias, inscripciones, avisosEnviados,
-    tablas: tablas.filter((t) => (t.temporada ?? Number(String(t.actualizada).slice(0, 4))) === anio).map((t) => ({ equipoId: t.equipo_id, filas: (t.filas || []).map((f) => (f && typeof f.equipo === 'string' ? { ...f, equipo: limpiarNombre(f.equipo) } : f)), actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
+    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: (t.filas || []).map((f) => (f && typeof f.equipo === 'string' ? { ...f, equipo: limpiarNombre(f.equipo) } : f)), actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
     club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     galeria: galeria.map(aFoto),
     prensa: (prensa || []).map((r) => ({ id: r.id, fuente: r.fuente, titulo: r.titulo, url: r.url, resumen: r.resumen || '', fecha: r.fecha_publicacion || (r.detectada || '').slice(0, 10), sirio: !!r.menciona_sirio, menciones: r.menciones || [], temas: r.temas || [] })),
@@ -251,7 +244,7 @@ export async function escribir(tipo, a, previo) {
     case 'equipo/foto':
       return revisar(await c.from('equipos').update({ foto_url: a.url || null, foto_cargada: !!a.url }).eq('id', a.equipoId))
     case 'tabla/guardar':
-      return revisar(await c.from('tablas').upsert({ equipo_id: a.equipoId, filas: a.filas, actualizada: a.actualizada, fuente: 'manual', temporada: Number(String(a.actualizada).slice(0, 4)) }))
+      return revisar(await c.from('tablas').upsert({ equipo_id: a.equipoId, filas: a.filas, actualizada: a.actualizada, fuente: 'manual' }))
     case 'club/guardar':
       return revisar(await c.from('club').upsert(deClub(a.club)))
     case 'galeria/agregar': {
