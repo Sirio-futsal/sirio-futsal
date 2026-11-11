@@ -28,7 +28,7 @@ export default function Inicio() {
           </span>
           <span className="chev" aria-hidden="true">›</span>
         </button>
-        {(estado.programacion || []).some((f) => f.tipo === 'partido' && (!f.fecha || f.fecha >= hoyISO)) ? (
+        {(estado.programacion || []).some((f) => f.tipo === 'partido' && f.equipoId && (!f.fecha || f.fecha >= hoyISO)) ? (
           <button type="button" className="fila fila-btn" onClick={() => ir('playoffs')}
             style={{ background: '#0d0f0e', color: 'var(--dorado)', border: '2px solid var(--dorado)', borderRadius: 14, padding: '12px 16px' }}>
             <span className="crece">
