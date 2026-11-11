@@ -76,12 +76,6 @@ export function DetalleCategoria({ id }) {
               )}
               <figcaption>{cat.nombre}{equipos.length > 1 ? ` · ${equipo.nombre}` : ''} · Temporada {hoyISO.slice(0, 4)}</figcaption>
             </figure>
-            <div className="tarjeta fila">
-              <span className="crece">
-                <span className="mini suave">Entrenador</span>
-                <span style={{ fontWeight: 600 }}>{equipo.entrenador || 'A confirmar'}</span>
-              </span>
-            </div>
           {cat.conFixture ? (
           <section className="seccion">
             <div className="seccion-cabeza">

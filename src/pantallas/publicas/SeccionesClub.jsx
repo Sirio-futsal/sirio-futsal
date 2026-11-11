@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { nombreEquipo, fechaCorta, posicionSirioTexto, Icono } from '../../componentes/comunes.jsx'
 import { filaDeSirio, parsearSponsors, parsearLineas, enlaceWhatsapp } from '../../datos/reglas.js'
@@ -151,17 +152,42 @@ export function Indumentaria() {
   )
 }
 
+const WA_SECRETARIA = '5493412852207'
+
 export function Sumate() {
-  const { estado, ir } = useApp()
-  const wa = enlaceWhatsapp(estado.club?.whatsapp)
+  const { categorias } = useApp()
+  const [f, setF] = useState({ nombre: '', nacimiento: '', categoria: '', telefono: '', mensaje: '' })
+  const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }))
+  const listo = f.nombre.trim() && f.telefono.trim()
+  const enviar = (e) => {
+    e.preventDefault()
+    if (!listo) return
+    const txt = [
+      'Hola! Quiero jugar en Sirio Futsal.',
+      `Nombre: ${f.nombre.trim()}`,
+      f.nacimiento ? `Fecha de nacimiento: ${f.nacimiento.split('-').reverse().join('/')}` : '',
+      f.categoria ? `Categoría de interés: ${f.categoria}` : '',
+      `Teléfono de contacto: ${f.telefono.trim()}`,
+      f.mensaje.trim() ? `Comentario: ${f.mensaje.trim()}` : '',
+    ].filter(Boolean).join('\n')
+    window.open(`https://wa.me/${WA_SECRETARIA}?text=${encodeURIComponent(txt)}`, '_blank', 'noopener,noreferrer')
+  }
+  const campo = { width: '100%', padding: '10px 12px', borderRadius: 10, border: 0, fontSize: 16, boxSizing: 'border-box' }
   return (
     <section id="sumate" className="hero ancla" style={{ background: 'var(--accion)', color: 'var(--accion-texto)' }} aria-labelledby="t-sumate">
       <h2 id="t-sumate" className="h2" style={{ fontSize: 26 }}>¿Querés jugar en Sirio?</h2>
-      <p style={{ margin: 0, fontSize: 14 }}>Dejanos tus datos y te contactamos con la categoría que corresponda.</p>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn-hero" onClick={() => ir('mas')}>Inscribirme</button>
-        {wa ? <a className="btn btn-hero" href={wa} {...externo}>Escribir por WhatsApp</a> : null}
-      </div>
+      <p style={{ margin: 0, fontSize: 14 }}>Completá tus datos y le llegan directo a la secretaría por WhatsApp.</p>
+      <form onSubmit={enviar} style={{ display: 'grid', gap: 8 }}>
+        <input style={campo} placeholder="Nombre y apellido" value={f.nombre} onChange={set('nombre')} autoComplete="name" required />
+        <input style={campo} type="date" aria-label="Fecha de nacimiento" value={f.nacimiento} onChange={set('nacimiento')} />
+        <select style={campo} aria-label="Categoría" value={f.categoria} onChange={set('categoria')}>
+          <option value="">Categoría (si no sabés, dejalo así)</option>
+          {(categorias || []).map((c) => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+        </select>
+        <input style={campo} type="tel" placeholder="Tu teléfono" value={f.telefono} onChange={set('telefono')} autoComplete="tel" required />
+        <textarea style={campo} rows={2} placeholder="Comentario (opcional)" value={f.mensaje} onChange={set('mensaje')} />
+        <button type="submit" className="btn btn-hero" disabled={!listo}>Enviar por WhatsApp</button>
+      </form>
     </section>
   )
 }
