@@ -3,9 +3,36 @@ import { useApp } from '../../estado.jsx'
 import { estiloFoto } from '../../datos/reglas.js'
 import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, fechaCorta, fechaLarga } from '../../componentes/comunes.jsx'
 
+const FUENTES = { cuna: 'Cuna del Futsal', rosarina: 'Asociación Rosarina', rosariodeportes: 'Rosario Deportes', lacapital: 'La Capital' }
+const TEMAS = [['todas', 'Todas'], ['sirio', 'Menciona a Sirio'], ['resultados', 'Resultados'], ['fixture', 'Fixture'], ['posiciones', 'Posiciones'], ['campeonato', 'Campeonatos'], ['ascensos', 'Ascensos y descensos'], ['jugadores', 'Jugadores'], ['entrenadores', 'Entrenadores']]
+
+// Titulares de la prensa de futsal: solo título, fuente, fecha y enlace al original. Lo oficial (tablas, fixture) sigue viniendo de la Rosarina.
+function Prensa() {
+  const { estado } = useApp()
+  const [tema, setTema] = useState('todas')
+  const lista = (estado.prensa || []).filter((n) => (tema === 'todas' ? true : tema === 'sirio' ? n.sirio : n.temas.includes(tema)))
+  return (
+    <>
+      <Chips etiqueta="Filtrar por tema" valor={tema} onCambio={setTema} opciones={TEMAS.map(([valor, texto]) => ({ valor, texto }))} />
+      {!lista.length ? <div className="tarjeta vacio">No hay notas para este filtro todavía.</div> : lista.map((n) => (
+        <a key={n.id} className="tarjeta" href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'grid', gap: 6, padding: 14, textDecoration: 'none', color: 'inherit', ...(n.sirio ? { borderColor: 'var(--dorado)', borderWidth: 2 } : {}) }}>
+          <span className="rotulo-verde" style={{ fontSize: 11, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span>{FUENTES[n.fuente] || n.fuente} · {fechaCorta(n.fecha)}</span>
+            {n.sirio ? <span style={{ background: 'var(--dorado)', color: '#0d0f0e', padding: '1px 8px', borderRadius: 999 }}>Menciona a Sirio{n.menciones.filter((m) => m !== 'Sirio').length ? ` · ${n.menciones.filter((m) => m !== 'Sirio').join(', ')}` : ''}</span> : null}
+          </span>
+          <span style={{ fontWeight: 700, lineHeight: 1.25, fontSize: 17 }}>{n.titulo}</span>
+          {n.resumen ? <span className="chico suave">{n.resumen}</span> : null}
+          <span className="mini" style={{ color: 'var(--verde-texto)', fontWeight: 600 }}>Leer la nota original ↗</span>
+        </a>
+      ))}
+    </>
+  )
+}
+
 export function ListaNoticias() {
   const { estado, ir, categorias, categoriaPorId } = useApp()
   const [filtro, setFiltro] = useState('todas')
+  const [vista, setVista] = useState('club')
   const lista = estado.noticias.filter((n) => (filtro === 'todas' ? true : filtro === 'club' ? n.categoriaId == null : n.categoriaId === filtro))
   const [destacada, ...resto] = lista
   return (
@@ -13,6 +40,11 @@ export function ListaNoticias() {
       <EncabezadoPublico />
       <main className="contenido g">
         <h1 className="h1">Noticias</h1>
+        <div className="pestanas" role="tablist">
+          <button type="button" role="tab" aria-selected={vista === 'club'} onClick={() => setVista('club')}>Del club</button>
+          <button type="button" role="tab" aria-selected={vista === 'prensa'} onClick={() => setVista('prensa')}>En los medios{(estado.prensa || []).some((n) => n.sirio) ? ' ●' : ''}</button>
+        </div>
+        {vista === 'prensa' ? <Prensa /> : (<>
         <Chips etiqueta="Filtrar noticias" valor={filtro} onCambio={setFiltro}
           opciones={[{ valor: 'todas', texto: 'Todas' }, { valor: 'club', texto: 'Del club' }, ...categorias.map((c) => ({ valor: c.id, texto: c.nombre }))]} />
         {!destacada ? <div className="tarjeta vacio">No hay noticias en esta sección.</div> : (
@@ -34,6 +66,7 @@ export function ListaNoticias() {
             </div>
           </button>
         ))}
+        </>)}
       </main>
       <NavPublica actual="noticias" />
     </>

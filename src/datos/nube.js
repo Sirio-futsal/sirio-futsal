@@ -77,7 +77,7 @@ export function estadoVacio(preferencias) {
 // Lee todo lo que la persona actual puede ver (la base filtra el resto).
 export async function cargarTodo(preferencias) {
   const c = sb()
-  const [equiposPub, partidos, noticias, boletin, tablas, club, galeria, sesionRes] = await Promise.all([
+  const [equiposPub, partidos, noticias, boletin, tablas, club, galeria, prensa, sesionRes] = await Promise.all([
     c.from('equipos_publicos').select('*').then(revisar),
     c.from('partidos').select('*').order('fecha').then(revisar),
     c.from('noticias').select('*').order('fecha', { ascending: false }).order('creada', { ascending: false }).then(revisar),
@@ -85,6 +85,7 @@ export async function cargarTodo(preferencias) {
     c.from('tablas').select('*').then(revisar),
     c.from('club').select('*').eq('id', 1).maybeSingle().then(revisar),
     c.from('galeria').select('*').order('creada', { ascending: false }).then(revisar),
+    c.from('prensa').select('id, fuente, titulo, url, resumen, fecha_publicacion, detectada, menciona_sirio, menciones, temas').order('fecha_publicacion', { ascending: false, nullsFirst: false }).order('detectada', { ascending: false }).limit(150).then(revisar).catch(() => []),
     c.auth.getSession(),
   ])
   const sesion = sesionRes.data?.session?.user?.id || null
@@ -130,6 +131,7 @@ export async function cargarTodo(preferencias) {
     tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: t.filas || [], actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
     club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     galeria: galeria.map(aFoto),
+    prensa: (prensa || []).map((r) => ({ id: r.id, fuente: r.fuente, titulo: r.titulo, url: r.url, resumen: r.resumen || '', fecha: r.fecha_publicacion || (r.detectada || '').slice(0, 10), sirio: !!r.menciona_sirio, menciones: r.menciones || [], temas: r.temas || [] })),
     boletin: boletin ? { numero: boletin.numero, fecha: boletin.fecha, jugadores: boletin.jugadores || [] } : { ...boletinBase, jugadores: [] },
     sesion,
     preferencias,
