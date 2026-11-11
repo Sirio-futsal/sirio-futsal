@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPanel, NavPanel } from './Comun.jsx'
 import { fechaCorta } from '../../componentes/comunes.jsx'
+import { subirImagen } from '../../datos/nube.js'
 import { esAdmin, puedePublicarEnCategoria } from '../../datos/reglas.js'
 
 export default function PanelNoticias() {
@@ -10,8 +11,23 @@ export default function PanelNoticias() {
     ...(esAdmin(usuario) ? [{ valor: 'club', texto: 'Todo el club' }] : []),
     ...categorias.filter((c) => puedePublicarEnCategoria(usuario, c.id, estado.equipos)).map((c) => ({ valor: c.id, texto: c.nombre })),
   ]
-  const [f, setF] = useState({ categoria: opciones[0]?.valor || '', titulo: '', bajada: '', texto: '' })
+  const [f, setF] = useState({ categoria: opciones[0]?.valor || '', titulo: '', bajada: '', texto: '', fotoUrl: '' })
+  const [subiendo, setSubiendo] = useState(false)
   const c = (k) => (e) => setF({ ...f, [k]: e.target.value })
+
+  const elegirFoto = async (e) => {
+    const archivo = e.target.files?.[0]
+    e.target.value = ''
+    if (!archivo) return
+    setSubiendo(true)
+    try {
+      const url = await subirImagen(archivo, 'noticias')
+      setF((x) => ({ ...x, fotoUrl: url }))
+    } catch (err) {
+      mostrarToast(err.message || 'No se pudo subir la foto.', 'error')
+    }
+    setSubiendo(false)
+  }
 
   const publicar = (e) => {
     e.preventDefault()
@@ -20,11 +36,11 @@ export default function PanelNoticias() {
       return
     }
     const ok = ejecutar('noticia/crear', {
-      noticia: { categoriaId: f.categoria === 'club' ? null : f.categoria, fecha: hoyISO, destacada: false, titulo: f.titulo.trim(), bajada: f.bajada.trim(), texto: f.texto.trim() },
+      noticia: { categoriaId: f.categoria === 'club' ? null : f.categoria, fecha: hoyISO, destacada: false, titulo: f.titulo.trim(), bajada: f.bajada.trim(), texto: f.texto.trim(), fotoUrl: f.fotoUrl || null },
     })
     if (ok) {
       mostrarToast('Noticia publicada.')
-      setF({ ...f, titulo: '', bajada: '', texto: '' })
+      setF({ ...f, titulo: '', bajada: '', texto: '', fotoUrl: '' })
     }
   }
 
@@ -46,9 +62,14 @@ export default function PanelNoticias() {
           <div className="campo"><label htmlFor="not-txt">Texto</label><textarea id="not-txt" className="control" value={f.texto} onChange={c('texto')} /></div>
           <div className="campo">
             <span className="etq">Foto</span>
-            <div className="rayado" style={{ height: 90, borderRadius: 10 }}>La carga de fotos se habilita en la versión real</div>
+            {f.fotoUrl ? <img src={f.fotoUrl} alt="Foto de la noticia" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 10 }} /> : null}
+            <label className="btn btn-secundario" style={{ textAlign: 'center', cursor: subiendo ? 'wait' : 'pointer' }}>
+              {subiendo ? 'Subiendo…' : f.fotoUrl ? 'Cambiar foto' : 'Elegir foto (opcional)'}
+              <input type="file" accept="image/*" onChange={elegirFoto} disabled={subiendo} style={{ display: 'none' }} />
+            </label>
+            {f.fotoUrl ? <button type="button" className="btn btn-peligro" onClick={() => setF({ ...f, fotoUrl: '' })}>Quitar foto</button> : null}
           </div>
-          <button type="submit" className="btn btn-primario">Publicar</button>
+          <button type="submit" className="btn btn-primario" disabled={subiendo}>Publicar</button>
         </form>
 
         <section className="seccion">

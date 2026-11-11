@@ -36,7 +36,7 @@ const dePartido = (p) => ({
   rival: p.rival, condicion: p.condicion, cancha: p.cancha ?? null, goles_sirio: p.golesSirio ?? null,
   goles_rival: p.golesRival ?? null, estado: p.estado, origen: p.origen || 'club',
 })
-const aNoticia = (r) => ({ id: r.id, categoriaId: r.categoria_id, fecha: r.fecha, destacada: r.destacada, titulo: r.titulo, bajada: r.bajada, texto: r.texto })
+const aNoticia = (r) => ({ id: r.id, categoriaId: r.categoria_id, fecha: r.fecha, destacada: r.destacada, titulo: r.titulo, bajada: r.bajada, texto: r.texto, fotoUrl: r.foto_url || null })
 const aJugador = (r) => ({
   id: r.id, equipoId: r.equipo_id, nombre: r.nombre, apellido: r.apellido, dorsal: r.dorsal ?? 0, posicion: r.posicion,
   esMenor: !!r.es_menor,
@@ -153,7 +153,7 @@ export async function escribir(tipo, a, previo) {
       return revisar(await c.from('partidos').upsert(dePartido(a.partido)))
     case 'noticia/crear': {
       const n = a.noticia
-      return revisar(await c.from('noticias').insert({ id: n.id, categoria_id: n.categoriaId ?? null, fecha: n.fecha, destacada: !!n.destacada, titulo: n.titulo, bajada: n.bajada || '', texto: n.texto || '' }))
+      return revisar(await c.from('noticias').insert({ id: n.id, categoria_id: n.categoriaId ?? null, fecha: n.fecha, destacada: !!n.destacada, titulo: n.titulo, bajada: n.bajada || '', texto: n.texto || '', foto_url: n.fotoUrl || null }))
     }
     case 'jugador/agregar': {
       const j = a.jugador

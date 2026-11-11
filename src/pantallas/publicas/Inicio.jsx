@@ -13,7 +13,7 @@ export default function Inicio() {
   // Foto de Novedades: sale de la Galería del club. Con una sola foto queda fija; con varias rota cada 24 hs.
   const fotosGaleria = (estado.galeria || []).map((f) => f.url).filter(Boolean).slice().reverse()
   const diaNum = Math.floor(Date.parse(`${hoyISO}T00:00:00Z`) / 86400000)
-  const fotoNovedad = fotosGaleria.length ? fotosGaleria[diaNum % fotosGaleria.length] : null
+  const fotoNovedad = (noticia && noticia.fotoUrl) || (fotosGaleria.length ? fotosGaleria[diaNum % fotosGaleria.length] : null)
   const secciones = seccionesDisponibles(estado)
 
   return (
