@@ -112,12 +112,29 @@ export function Archivo() {
 
 export function Historia() {
   const { estado } = useApp()
+  const [abierta, setAbierta] = useState(false)
   const texto = String(estado.club?.historia || '').trim()
   if (!texto) return null
+  const bloques = texto.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean)
+  const titulo = bloques.length > 1 && bloques[0].length < 80 ? bloques[0] : ''
+  const cuerpo = titulo ? bloques.slice(1) : bloques
+  const visibles = abierta ? cuerpo : cuerpo.slice(0, 1)
+  const irASumate = () => document.getElementById('sumate')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   return (
     <section id="historia" className="seccion ancla" aria-labelledby="t-historia">
       <h2 id="t-historia" className="h2">Nuestra historia</h2>
-      <div className="tarjeta" style={{ padding: 14 }}><p className="texto-largo">{texto}</p></div>
+      <div className="tarjeta" style={{ padding: 14, display: 'grid', gap: 12 }}>
+        {titulo ? <strong style={{ fontFamily: 'var(--display)', fontSize: 20, textTransform: 'uppercase', lineHeight: 1.15 }}>{titulo}</strong> : null}
+        {visibles.map((p, k) => <p key={k} className="texto-largo">{p}</p>)}
+        {cuerpo.length > 1 ? (
+          <button type="button" className="btn btn-secundario" aria-expanded={abierta} onClick={() => setAbierta((v) => !v)}>
+            {abierta ? 'Ver menos' : 'Conocé más'}
+          </button>
+        ) : null}
+        {abierta || cuerpo.length <= 1 ? (
+          <button type="button" className="btn btn-primario" onClick={irASumate}>Formá parte de nuestro club</button>
+        ) : null}
+      </div>
     </section>
   )
 }
