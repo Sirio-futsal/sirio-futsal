@@ -57,7 +57,7 @@ export function Posiciones() {
           <button key={t.equipoId} type="button" className="fila fila-btn" onClick={() => ir(`categoria-${equipo.categoriaId}`)}>
             <span className="crece">
               <span style={{ fontWeight: 600 }}>{nombreEquipo(equipo, categoriaPorId)}</span>
-              <span className="mini suave">Actualizada el {fechaCorta(t.actualizada)}</span>
+              <span className="mini suave">{t.fuente === 'arf' ? 'Actualizada automáticamente · ' : 'Actualizada el '}{fechaCorta(t.actualizada)}</span>
             </span>
             <span className="num" style={{ fontWeight: 700 }}>{posicionSirioTexto(t.filas)}</span>
             <span className="chev" aria-hidden="true">›</span>

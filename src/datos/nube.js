@@ -127,7 +127,7 @@ export async function cargarTodo(preferencias) {
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
     usuarios, sugerencias, inscripciones, avisosEnviados,
-    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: t.filas || [], actualizada: t.actualizada })),
+    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: t.filas || [], actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
     club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     galeria: galeria.map(aFoto),
     boletin: boletin ? { numero: boletin.numero, fecha: boletin.fecha, jugadores: boletin.jugadores || [] } : { ...boletinBase, jugadores: [] },
@@ -140,7 +140,7 @@ export async function cargarTodo(preferencias) {
 export const ACCIONES_NUBE = new Set([
   'partido/guardar', 'noticia/crear', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
-  'equipo/entrenador', 'equipo/foto', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
+  'equipo/entrenador', 'equipo/foto', 'tabla/guardar', 'equipo/automatico', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
 ])
 
 const esInvitacion = (id) => String(id).startsWith('inv-')
@@ -205,7 +205,9 @@ export async function escribir(tipo, a, previo) {
     case 'equipo/foto':
       return revisar(await c.from('equipos').update({ foto_url: a.url || null, foto_cargada: !!a.url }).eq('id', a.equipoId))
     case 'tabla/guardar':
-      return revisar(await c.from('tablas').upsert({ equipo_id: a.equipoId, filas: a.filas, actualizada: a.actualizada }))
+      return revisar(await c.from('tablas').upsert({ equipo_id: a.equipoId, filas: a.filas, actualizada: a.actualizada, fuente: 'manual' }))
+    case 'equipo/automatico':
+      return revisar(await c.rpc('volver_a_automatico', { p_equipo: a.equipoId }))
     case 'club/guardar':
       return revisar(await c.from('club').upsert(deClub(a.club)))
     case 'galeria/agregar': {

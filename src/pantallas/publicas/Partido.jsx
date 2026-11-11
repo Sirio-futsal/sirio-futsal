@@ -46,7 +46,7 @@ export default function Partido({ id }) {
           <div className="nota-dato"><span className="suave">Hora</span><span className="num">{p.hora || 'A confirmar'}{p.horaAnterior ? ` (antes ${p.horaAnterior})` : ''}</span></div>
           <div className="nota-dato"><span className="suave">Condición</span><span>{local ? 'Local' : 'Visitante'}</span></div>
           <div className="nota-dato"><span className="suave">Cancha</span><span>{p.cancha || 'A confirmar'}</span></div>
-          <div className="nota-dato"><span className="suave">Fuente</span><span>{p.origen === 'arf' ? 'Asociación Rosarina, aprobado por el club' : 'Club Argentino Sirio'}</span></div>
+          <div className="nota-dato"><span className="suave">Fuente</span><span>{p.origen === 'arf' ? 'Asociación Rosarina (automático)' : 'Club Argentino Sirio'}</span></div>
         </div>
         {p.horaAnterior && !jugado ? <span className="insignia insignia-alerta">Cambio de horario: antes {p.horaAnterior}, ahora {p.hora}</span> : null}
         {estado.preferencias.seguidos.includes(equipo.id) ? (

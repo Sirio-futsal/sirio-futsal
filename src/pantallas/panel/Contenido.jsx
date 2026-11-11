@@ -3,11 +3,11 @@ import { useApp } from '../../estado.jsx'
 import { EncabezadoPanel, NavPanel, SoloAdmin } from './Comun.jsx'
 import { nombreEquipo, fechaCorta, TablaPosiciones } from '../../componentes/comunes.jsx'
 import { parsearTabla, filaDeSirio } from '../../datos/reglas.js'
-import { subirImagen } from '../../datos/nube.js'
+import { subirImagen, NUBE_ACTIVA } from '../../datos/nube.js'
 
 // ---------- Tablas de posiciones ----------
 export function PanelTablas() {
-  const { estado, ejecutar, mostrarToast, hoyISO, categoriaPorId } = useApp()
+  const { estado, ejecutar, mostrarToast, hoyISO, categoriaPorId, recargar } = useApp()
   const equipos = estado.equipos.filter((e) => e.categoriaId !== 'escuelita')
   const [equipoId, setEquipoId] = useState(equipos[0]?.id)
   const [texto, setTexto] = useState('')
@@ -57,12 +57,19 @@ export function PanelTablas() {
             </section>
           ) : actual ? (
             <section className="seccion">
-              <span className="chico" style={{ fontWeight: 600 }}>Tabla publicada (actualizada el {fechaCorta(actual.actualizada)})</span>
+              <span className="chico" style={{ fontWeight: 600 }}>{actual.fuente === 'arf' ? 'Tabla automática de la Rosarina' : 'Tabla cargada a mano'} (actualizada el {fechaCorta(actual.actualizada)})</span>
               <TablaPosiciones filas={actual.filas} />
             </section>
           ) : <div className="tarjeta vacio">Este equipo todavía no tiene tabla cargada.</div>}
           <button type="button" className="btn btn-primario" onClick={guardar} disabled={!filas.length}>Guardar y publicar</button>
-          {!hayAlguna ? <span className="ayuda">Más adelante la app va a leer estas tablas sola de la web de la Rosarina.</span> : null}
+          {NUBE_ACTIVA ? (
+            <section className="seccion">
+              <span className="ayuda">Las tablas y los partidos se leen solos de la Rosarina cada 2 horas. Si corregís algo a mano, esa tabla o partido deja de actualizarse solo, hasta que vuelvas a automático.</span>
+              <button type="button" className="btn" onClick={() => { ejecutar('equipo/automatico', { equipoId }); mostrarToast('Listo, este equipo vuelve a actualizarse solo.'); setTimeout(recargar, 1500) }}>
+                Volver a automático (tabla y partidos de este equipo)
+              </button>
+            </section>
+          ) : null}
         </main>
       </SoloAdmin>
       <NavPanel actual="panel-mas" />

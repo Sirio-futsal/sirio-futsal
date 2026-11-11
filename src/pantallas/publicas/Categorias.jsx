@@ -90,7 +90,7 @@ export function DetalleCategoria({ id }) {
           <section className="seccion">
             <div className="seccion-cabeza">
               <h2 className="h2">Posiciones</h2>
-              {tabla ? <span className="mini suave">Actualizada el {fechaCorta(tabla.actualizada)}</span> : null}
+              {tabla ? <span className="mini suave">{tabla.fuente === 'arf' ? 'Actualizada automáticamente · ' : 'Actualizada el '}{tabla.fuente === 'arf' ? fechaCorta(tabla.actualizada) : fechaCorta(tabla.actualizada)}</span> : null}
             </div>
             {tabla && tabla.filas.length ? (
               <>
