@@ -19,6 +19,7 @@ export function seccionesDisponibles(estado) {
   return [
     { id: 'novedades', texto: 'Novedades', ok: estado.noticias.length > 0 },
     { id: 'posiciones', texto: 'Posiciones', ok: conSirio },
+    { id: 'indumentaria', texto: 'Indumentaria', ok: hay(club.indumentariaTexto) || hay(club.indumentariaUrl) },
     { id: 'boletin', texto: 'Boletín', ok: !!(estado.boletin && estado.boletin.jugadores.length) },
     { id: 'galeria', texto: 'Galería', ok: (estado.galeria || []).length > 0 },
     { id: 'archivo', texto: 'Archivo', ok: hay(club.archivo) },
@@ -144,7 +145,7 @@ export function Indumentaria() {
   const club = estado.club || {}
   if (!String(club.indumentariaTexto || '').trim() && !String(club.indumentariaUrl || '').trim()) return null
   return (
-    <section className="tarjeta seccion" style={{ padding: 14 }} aria-labelledby="t-indu">
+    <section id="indumentaria" className="tarjeta seccion ancla" style={{ padding: 14 }} aria-labelledby="t-indu">
       <h2 id="t-indu" className="h2" style={{ fontSize: 22 }}>Indumentaria</h2>
       {club.indumentariaTexto ? <p className="texto-largo">{club.indumentariaTexto}</p> : null}
       {/^https?:\/\//i.test(club.indumentariaUrl || '') ? <a className="btn btn-primario" href={club.indumentariaUrl} {...externo}>Hacer el pedido</a> : null}

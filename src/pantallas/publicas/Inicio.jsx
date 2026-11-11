@@ -1,6 +1,7 @@
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, NavPublica, ESCUDO, TarjetaPartido, fechaCorta, nombreEquipo, iniciales, ordenarPartidos } from '../../componentes/comunes.jsx'
 import { resultadoSirio } from '../../datos/reglas.js'
+import Carrusel from './Carrusel.jsx'
 import { MenuSecciones, seccionesDisponibles, Posiciones, Galeria, Archivo, Historia, Sponsors, Indumentaria, Sumate, Contacto } from './SeccionesClub.jsx'
 
 export default function Inicio() {
@@ -28,34 +29,7 @@ export default function Inicio() {
           <span className="chev" aria-hidden="true">›</span>
         </button>
         <MenuSecciones secciones={secciones} />
-        {proximo ? (
-          <section className="hero" aria-label="Próximo partido">
-            <div className="seccion-cabeza" style={{ alignItems: 'center' }}>
-              <span className="hero-rotulo">PRÓXIMO PARTIDO</span>
-              <span className="hero-chip">{nombreEquipo(equipoPorId[proximo.equipoId], categoriaPorId, true)}</span>
-            </div>
-            <div className="duelo">
-              <div className="equipo-duelo">
-                <img src={ESCUDO} alt="Escudo de Sirio" />
-                <span className="nombre-duelo">{proximo.condicion === 'local' ? 'Sirio' : proximo.rival}</span>
-              </div>
-              <div className="equipo-duelo">
-                <span className="marcador num" style={{ fontSize: 32 }}>{proximo.hora || 'A conf.'}</span>
-                <span className="hero-suave">{fechaCorta(proximo.fecha)}</span>
-              </div>
-              <div className="equipo-duelo">
-                {proximo.condicion === 'local' ? <span className="escudo-rival">{iniciales(proximo.rival)}</span> : <img src={ESCUDO} alt="Escudo de Sirio" />}
-                <span className="nombre-duelo">{proximo.condicion === 'local' ? proximo.rival : 'Sirio'}</span>
-              </div>
-            </div>
-            <div className="seccion-cabeza" style={{ alignItems: 'center' }}>
-              <span className="hero-suave">{proximo.cancha || 'Cancha a confirmar'}</span>
-              <button type="button" className="btn btn-hero" onClick={() => ir(`partido-${proximo.id}`)}>Ver detalle</button>
-            </div>
-          </section>
-        ) : (
-          <section className="tarjeta vacio">No hay partidos programados.</section>
-        )}
+        <Carrusel />
 
         <section className="seccion">
           <div className="seccion-cabeza">
