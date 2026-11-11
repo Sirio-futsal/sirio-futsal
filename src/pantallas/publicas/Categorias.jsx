@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, TarjetaPartido, TablaPosiciones, ordenarPartidos, nombreEquipo, fechaCorta } from '../../componentes/comunes.jsx'
 import { ordenEquipo } from './SeccionesClub.jsx'
-import { fotoEquipoPublicable, fotoDelDia } from '../../datos/reglas.js'
+import { fotoEquipoPublicable, fotoDelDia, categoriasDeNota } from '../../datos/reglas.js'
 
 export function ListaCategorias() {
   const { estado, ir, categorias } = useApp()
@@ -49,6 +49,7 @@ export function DetalleCategoria({ id }) {
   const proximos = partidos.filter((p) => p.estado !== 'jugado' && (!p.fecha || p.fecha >= hoyISO))
   const jugados = partidos.filter((p) => p.estado === 'jugado').reverse()
   const pestanaActiva = !cat.conFixture ? 'equipo' : pestana
+  const enPrensa = (estado.prensa || []).filter((n) => categoriasDeNota(n).includes(id)).slice(0, 4)
 
   return (
     <>
@@ -77,6 +78,18 @@ export function DetalleCategoria({ id }) {
               )}
               <figcaption>{cat.nombre}{equipos.length > 1 ? ` · ${equipo.nombre}` : ''} · Temporada {hoyISO.slice(0, 4)}</figcaption>
             </figure>
+          {enPrensa.length ? (
+            <section className="seccion">
+              <div className="seccion-cabeza"><h2 className="h2">En la prensa</h2><span className="mini suave">Notas de medios que mencionan a Sirio</span></div>
+              {enPrensa.map((n) => (
+                <a key={n.id} className="tarjeta" href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'grid', gap: 4, padding: 14, textDecoration: 'none', color: 'inherit', borderColor: 'var(--dorado)', borderWidth: 2 }}>
+                  <span className="mini suave">{{ cuna: 'Cuna del Futsal', rosarina: 'Asociación Rosarina', rosariodeportes: 'Rosario Deportes', lacapital: 'La Capital' }[n.fuente] || n.fuente} · {fechaCorta(n.fecha)}</span>
+                  <span style={{ fontWeight: 700, lineHeight: 1.25 }}>{n.titulo}</span>
+                  <span className="mini" style={{ color: 'var(--verde-texto)', fontWeight: 600 }}>Leer la nota original ↗</span>
+                </a>
+              ))}
+            </section>
+          ) : null}
           {cat.conFixture ? (
           <section className="seccion">
             <div className="seccion-cabeza">

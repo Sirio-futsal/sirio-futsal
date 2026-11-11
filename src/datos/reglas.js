@@ -174,3 +174,19 @@ export function estiloFoto(pos) {
   const zoom = Number.isFinite(z) && z >= 1 ? z : 1
   return { objectFit: 'cover', objectPosition: `${px}% ${py}%`, transformOrigin: `${px}% ${py}%`, ...(zoom > 1 ? { transform: `scale(${zoom})` } : {}) }
 }
+
+// Categorías de Sirio a las que corresponde una nota de prensa, según lo que se detectó en el texto.
+export function categoriasDeNota(nota) {
+  const m = nota.menciones || []
+  if (!nota.sirio) return []
+  const out = new Set()
+  const fem = m.includes('Femenino') || m.includes('Sub-14')
+  if (fem) out.add('fem-b')
+  if (m.includes('Veteranos')) out.add('veteranos')
+  if (m.includes('Sirio B')) out.add('masc-b')
+  if (m.includes('Primera A')) out.add('masc-a')
+  if (m.includes('Primera B') && !fem) out.add('masc-b')
+  const inferiores = m.some((x) => ['Reserva', '4ta', '5ta', '6ta', '7ma', '8va', '9na'].includes(x))
+  if ((inferiores || m.includes('Primera')) && !fem && !m.includes('Sirio B') && !m.includes('Primera B')) out.add('masc-a')
+  return [...out]
+}
