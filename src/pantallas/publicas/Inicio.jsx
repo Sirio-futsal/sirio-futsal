@@ -15,6 +15,14 @@ export default function Inicio() {
     <>
       <EncabezadoPublico />
       <main className="contenido g">
+        <button type="button" className="fila fila-btn" onClick={() => ir('tablas')}
+          style={{ background: 'var(--rojo, #c8102e)', color: '#fff', borderRadius: 14, padding: '14px 16px' }}>
+          <span className="crece">
+            <span style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 700, textTransform: 'uppercase' }}>Tabla de posiciones</span>
+            <span className="mini" style={{ color: '#fff', opacity: .85 }}>Todas las categorías, siempre actualizada</span>
+          </span>
+          <span className="chev" aria-hidden="true">›</span>
+        </button>
         <MenuSecciones secciones={secciones} />
         {proximo ? (
           <section className="hero" aria-label="Próximo partido">

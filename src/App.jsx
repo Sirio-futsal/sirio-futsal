@@ -5,6 +5,7 @@ import Fixture from './pantallas/publicas/Fixture.jsx'
 import Partido from './pantallas/publicas/Partido.jsx'
 import { ListaCategorias, DetalleCategoria } from './pantallas/publicas/Categorias.jsx'
 import { ListaNoticias, DetalleNoticia } from './pantallas/publicas/Noticias.jsx'
+import Tablas from './pantallas/publicas/Tablas.jsx'
 import Mas from './pantallas/publicas/Mas.jsx'
 import Avisos from './pantallas/publicas/Avisos.jsx'
 import GaleriaCompleta from './pantallas/publicas/Galeria.jsx'
@@ -49,6 +50,7 @@ function Pantalla() {
   }
   if (vista.startsWith('noticia-')) return <DetalleNoticia id={vista.slice('noticia-'.length)} />
   switch (vista) {
+    case 'tablas': return <Tablas />
     case 'fixture': return <Fixture />
     case 'categorias': return <ListaCategorias />
     case 'noticias': return <ListaNoticias />
