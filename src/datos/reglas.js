@@ -205,3 +205,13 @@ export function partidosDePlayoff(filas, partidos) {
       golesSirio: null, golesRival: null, estado: 'programado', origen: 'playoff', ronda: null, derivado: true, instancia: f.instancia,
     }))
 }
+
+// La web de la Asociación a veces trae los nombres con códigos (&ordm;, &Aacute;): se muestran como corresponde.
+const ENTIDADES = { ordm: 'º', ordf: 'ª', aacute: 'á', eacute: 'é', iacute: 'í', oacute: 'ó', uacute: 'ú', ntilde: 'ñ', Aacute: 'Á', Eacute: 'É', Iacute: 'Í', Oacute: 'Ó', Uacute: 'Ú', Ntilde: 'Ñ', uuml: 'ü', amp: '&', quot: '"', apos: "'", nbsp: ' ' }
+export function limpiarNombre(t) {
+  if (typeof t !== 'string' || !t.includes('&')) return typeof t === 'string' ? t.replace(/\b1\s*[º°]\s*de mayo\b/i, '1ro de Mayo') : t
+  const x = t
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+    .replace(/&([a-zA-Z]+);/g, (m, n) => ENTIDADES[n] ?? m)
+  return x.replace(/\b1\s*[º°]\s*de mayo\b/i, '1ro de Mayo')
+}

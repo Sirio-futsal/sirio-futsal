@@ -100,7 +100,7 @@ const NOMBRES = {
   ARGSIRIO: 'Argentino Sirio', ARGSIRIOB: 'Argentino Sirio B', ARGENTINOSIRIO: 'Argentino Sirio',
   SCORAZON: 'Sagrado Corazón', NAURORA: 'Nueva Aurora', CCORDOBA: 'Central Córdoba', RCENTRAL: 'Rosario Central',
   UCENTRAL: 'Unión Central', UAMERICANA: 'Unión Americana', MMADRE: 'María Madre', NAUTICO: 'Náutico', NAUTICOB: 'Náutico B',
-  PROVINCIALB: 'Provincial B', '1DEMAYO': '1° de Mayo', USAR: 'USAR', UNR: 'UNR', UNRGIM: 'UNR Gimnasio',
+  PROVINCIALB: 'Provincial B', '1DEMAYO': '1ro de Mayo', USAR: 'USAR', UNR: 'UNR', UNRGIM: 'UNR Gimnasio',
   BANCONACION: 'Banco Nación', NEWELLS: "Newell's", ELLUCHADOR: 'El Luchador', RIONEGRO: 'Río Negro', TELEFONOS: 'Teléfonos',
   OVALO: 'Óvalo', JOCKEYCLUB: 'Jockey Club', TIROSUIZO: 'Tiro Suizo', SOCIALLUX: 'Social Lux',
 }

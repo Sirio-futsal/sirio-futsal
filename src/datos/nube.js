@@ -3,7 +3,7 @@
 // ver o cambiar lo decide la seguridad por fila de la base (supabase/esquema.sql).
 import { createClient } from '@supabase/supabase-js'
 import { equiposBase, boletinBase, clubBase } from './ejemplo.js'
-import { partidosDePlayoff } from './reglas.js'
+import { partidosDePlayoff, limpiarNombre } from './reglas.js'
 
 export const SUPABASE_URL = 'https://vnsqmoyiepgycwgxvbqs.supabase.co'
 export const SUPABASE_CLAVE = 'sb_publishable_ixs_1n9338IiEAGP8vXHUA_KWmhQcMU'
@@ -29,7 +29,7 @@ function revisar({ data, error }) {
 // ---------- Filas de la base <-> objetos de la app ----------
 const aPartido = (r) => ({
   id: r.id, equipoId: r.equipo_id, fecha: r.fecha, hora: r.hora, horaAnterior: r.hora_anterior,
-  rival: r.rival, condicion: r.condicion, cancha: r.cancha, golesSirio: r.goles_sirio, golesRival: r.goles_rival,
+  rival: limpiarNombre(r.rival), condicion: r.condicion, cancha: limpiarNombre(r.cancha), golesSirio: r.goles_sirio, golesRival: r.goles_rival,
   estado: r.estado, origen: r.origen, ronda: r.ronda ?? null,
 })
 const dePartido = (p) => ({
@@ -141,7 +141,7 @@ export async function cargarTodo(preferencias) {
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
     usuarios, sugerencias, inscripciones, avisosEnviados,
-    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: t.filas || [], actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
+    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: (t.filas || []).map((f) => (f && typeof f.equipo === 'string' ? { ...f, equipo: limpiarNombre(f.equipo) } : f)), actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
     club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     galeria: galeria.map(aFoto),
     prensa: (prensa || []).map((r) => ({ id: r.id, fuente: r.fuente, titulo: r.titulo, url: r.url, resumen: r.resumen || '', fecha: r.fecha_publicacion || (r.detectada || '').slice(0, 10), sirio: !!r.menciona_sirio, menciones: r.menciones || [], temas: r.temas || [] })),
