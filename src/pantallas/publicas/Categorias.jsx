@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, TarjetaPartido, TablaPosiciones, ordenarPartidos, nombreEquipo, fechaCorta } from '../../componentes/comunes.jsx'
+import { ordenEquipo } from './SeccionesClub.jsx'
 import { fotoEquipoPublicable, fotoDelDia } from '../../datos/reglas.js'
 
 export function ListaCategorias() {
@@ -36,7 +37,7 @@ export function ListaCategorias() {
 export function DetalleCategoria({ id }) {
   const { estado, hoyISO, categoriaPorId } = useApp()
   const cat = categoriaPorId[id]
-  const equipos = estado.equipos.filter((e) => e.categoriaId === id)
+  const equipos = estado.equipos.filter((e) => e.categoriaId === id).sort((x, y) => ordenEquipo(x.id) - ordenEquipo(y.id))
   const [equipoId, setEquipoId] = useState(equipos[0]?.id)
   const [pestana, setPestana] = useState('equipo')
   if (!cat) return null

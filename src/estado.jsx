@@ -86,8 +86,8 @@ function reductor(s, a) {
     }
     case 'equipo/fotos': {
       const fotos = a.fotos || []
-      const nuevo = { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, fotos, fotoUrl: fotos[0] || null, fotoCargada: fotos.length > 0, ...(typeof e.fotoPublicable === 'boolean' ? { fotoPublicable: false } : {}) } : e)) }
-      return conFotoRecalculada(nuevo, a.equipoId)
+      const nuevo = { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, fotos, fotoUrl: fotos[0] || null, fotoCargada: fotos.length > 0, fotosAutorizadas: fotos.length > 0, ...(typeof e.fotoPublicable === 'boolean' ? { fotoPublicable: fotos.length > 0 } : {}) } : e)) }
+      return nuevo
     }
     case 'tabla/guardar': {
       const otras = (s.tablas || []).filter((t) => t.equipoId !== a.equipoId)

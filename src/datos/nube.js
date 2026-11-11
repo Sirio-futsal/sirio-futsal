@@ -48,7 +48,7 @@ const aAviso = (r) => ({ id: r.id, tipo: r.tipo, equipoId: r.equipo_id, categori
 
 const aEquipo = (r) => ({
   id: r.id, categoriaId: r.categoria_id, nombre: r.nombre, grupo: r.grupo, ...(r.division ? { division: r.division } : {}),
-  entrenador: r.entrenador || '', fotoUrl: r.foto_url || null, fotos: r.fotos || [], fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable,
+  entrenador: r.entrenador || '', fotoUrl: r.foto_url || null, fotos: r.fotos || [], fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable, fotosAutorizadas: !!r.fotos_autorizadas,
 })
 const aClub = (r) => ({
   historia: r.historia || '', direccion: r.direccion || '', telefono: r.telefono || '', whatsapp: r.whatsapp || '',
@@ -203,7 +203,7 @@ export async function escribir(tipo, a, previo) {
     case 'equipo/entrenador':
       return revisar(await c.from('equipos').update({ entrenador: a.entrenador.trim() || null }).eq('id', a.equipoId))
     case 'equipo/fotos':
-      return revisar(await c.from('equipos').update({ fotos: a.fotos || [], foto_url: (a.fotos || [])[0] || null, foto_cargada: (a.fotos || []).length > 0 }).eq('id', a.equipoId))
+      return revisar(await c.from('equipos').update({ fotos: a.fotos || [], foto_url: (a.fotos || [])[0] || null, foto_cargada: (a.fotos || []).length > 0, fotos_autorizadas: (a.fotos || []).length > 0 }).eq('id', a.equipoId))
     case 'equipo/foto':
       return revisar(await c.from('equipos').update({ foto_url: a.url || null, foto_cargada: !!a.url }).eq('id', a.equipoId))
     case 'tabla/guardar':
