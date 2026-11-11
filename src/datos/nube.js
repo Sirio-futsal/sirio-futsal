@@ -29,7 +29,7 @@ function revisar({ data, error }) {
 const aPartido = (r) => ({
   id: r.id, equipoId: r.equipo_id, fecha: r.fecha, hora: r.hora, horaAnterior: r.hora_anterior,
   rival: r.rival, condicion: r.condicion, cancha: r.cancha, golesSirio: r.goles_sirio, golesRival: r.goles_rival,
-  estado: r.estado, origen: r.origen,
+  estado: r.estado, origen: r.origen, ronda: r.ronda ?? null,
 })
 const dePartido = (p) => ({
   id: p.id, equipo_id: p.equipoId, fecha: p.fecha, hora: p.hora ?? null, hora_anterior: p.horaAnterior ?? null,

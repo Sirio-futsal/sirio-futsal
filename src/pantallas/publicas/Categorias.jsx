@@ -45,7 +45,7 @@ export function DetalleCategoria({ id }) {
   const foto = fotoEquipoPublicable(equipo, delEquipo)
   const tabla = (estado.tablas || []).find((t) => t.equipoId === equipo.id)
   const partidos = ordenarPartidos(estado.partidos.filter((p) => p.equipoId === equipo.id))
-  const proximos = partidos.filter((p) => p.estado !== 'jugado' && p.fecha >= hoyISO)
+  const proximos = partidos.filter((p) => p.estado !== 'jugado' && (!p.fecha || p.fecha >= hoyISO))
   const jugados = partidos.filter((p) => p.estado === 'jugado').reverse()
   const pestanaActiva = !cat.conFixture ? 'equipo' : pestana
 

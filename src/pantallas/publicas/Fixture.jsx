@@ -10,7 +10,7 @@ export default function Fixture() {
   const [cat, setCat] = useState('todas')
   const [grupo, setGrupo] = useState('todos')
   const [division, setDivision] = useState('todas')
-  const [modo, setModo] = useState('proximos')
+  const [modoElegido, setModoElegido] = useState(null)
 
   const catsFixture = categorias.filter((c) => c.conFixture)
   const equiposCat = cat === 'todas' ? [] : estado.equipos.filter((e) => e.categoriaId === cat)
@@ -25,9 +25,15 @@ export default function Fixture() {
     if (cat !== 'todas' && e.categoriaId !== cat) return false
     if (grupo !== 'todos' && e.grupo !== grupo) return false
     if (grupo === 'inferiores' && division !== 'todas' && e.division !== division) return false
-    return modo === 'proximos' ? p.estado !== 'jugado' && p.fecha >= hoyISO : p.estado === 'jugado'
+    return true
   })
-  const grupos = agruparPorFecha(ordenarPartidos(lista, modo === 'proximos'))
+  const esProximo = (p) => p.estado !== 'jugado' && (!p.fecha || p.fecha >= hoyISO)
+  const hayProximos = lista.some(esProximo)
+  // Si no hay partidos por jugar, se muestran directamente los resultados del año
+  const modo = modoElegido || (hayProximos ? 'proximos' : 'resultados')
+  const setModo = setModoElegido
+  const visibles = lista.filter((p) => (modo === 'proximos' ? esProximo(p) : p.estado === 'jugado'))
+  const grupos = agruparPorFecha(ordenarPartidos(visibles, modo === 'proximos'))
 
   return (
     <>
@@ -58,7 +64,7 @@ export default function Fixture() {
         ) : (
           grupos.map((g) => (
             <section key={g.fecha} className="seccion">
-              <h2 className="rotulo">{fechaLarga(g.fecha)}</h2>
+              <h2 className="rotulo">{g.fecha ? fechaLarga(g.fecha) : 'Fecha a confirmar'}</h2>
               {g.partidos.map((p) => <TarjetaPartido key={p.id} partido={p} />)}
             </section>
           ))

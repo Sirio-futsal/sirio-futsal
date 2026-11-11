@@ -27,8 +27,8 @@ const aFecha = (iso) => {
   const [a, m, d] = iso.split('-').map(Number)
   return new Date(a, m - 1, d)
 }
-export const fechaLarga = (iso) => fLarga.format(aFecha(iso))
-export const fechaCorta = (iso) => fCorta.format(aFecha(iso)).replace(/\./g, '')
+export const fechaLarga = (iso) => (iso ? fLarga.format(aFecha(iso)) : 'Fecha a confirmar')
+export const fechaCorta = (iso) => (iso ? fCorta.format(aFecha(iso)).replace(/\./g, '') : 'A confirmar')
 
 export function nombreEquipo(equipo, categoriaPorId, corto = false) {
   if (!equipo) return ''
@@ -163,7 +163,7 @@ export function TarjetaPartido({ partido, mostrarFecha = false }) {
           : local ? `Sirio vs ${partido.rival}` : `${partido.rival} vs Sirio`}
       </span>
       <span className="chico suave">
-        {mostrarFecha ? `${fechaCorta(partido.fecha)} · ` : ''}{local ? 'Local' : 'Visitante'} · {partido.cancha || 'Cancha a confirmar'}
+        {mostrarFecha ? `${partido.fecha ? fechaCorta(partido.fecha) : `Fecha ${partido.ronda || ''} · a confirmar`.replace('  ', ' ')} · ` : ''}{local ? 'Local' : 'Visitante'} · {partido.cancha || 'Cancha a confirmar'}
       </span>
       {partido.horaAnterior && partido.estado === 'programado' ? <span className="insignia insignia-alerta">Cambio de horario</span> : null}
       {partido.estado === 'suspendido' ? <span className="insignia insignia-alerta">Suspendido</span> : null}
@@ -184,8 +184,8 @@ export function agruparPorFecha(partidos) {
 
 export function ordenarPartidos(lista, asc = true) {
   return [...lista].sort((a, b) => {
-    const k1 = `${a.fecha} ${a.hora || '99:99'}`
-    const k2 = `${b.fecha} ${b.hora || '99:99'}`
+    const k1 = `${a.fecha || '9999-99-99'} ${a.hora || '99:99'} ${String(a.ronda || 0).padStart(3, '0')}`
+    const k2 = `${b.fecha || '9999-99-99'} ${b.hora || '99:99'} ${String(b.ronda || 0).padStart(3, '0')}`
     return asc ? k1.localeCompare(k2) : k2.localeCompare(k1)
   })
 }
