@@ -7,7 +7,7 @@ import { subirImagen, NUBE_ACTIVA } from '../../datos/nube.js'
 
 // ---------- Tablas de posiciones ----------
 export function PanelTablas() {
-  const { estado, ejecutar, mostrarToast, hoyISO, categoriaPorId, recargar } = useApp()
+  const { estado, ejecutar, mostrarToast, hoyISO, categoriaPorId } = useApp()
   const equipos = estado.equipos.filter((e) => e.categoriaId !== 'escuelita')
   const [equipoId, setEquipoId] = useState(equipos[0]?.id)
   const [texto, setTexto] = useState('')
@@ -62,14 +62,7 @@ export function PanelTablas() {
             </section>
           ) : <div className="tarjeta vacio">Este equipo todavía no tiene tabla cargada.</div>}
           <button type="button" className="btn btn-primario" onClick={guardar} disabled={!filas.length}>Guardar y publicar</button>
-          {NUBE_ACTIVA ? (
-            <section className="seccion">
-              <span className="ayuda">Las tablas y los partidos se leen solos de la Rosarina cada 2 horas. Si corregís algo a mano, esa tabla o partido deja de actualizarse solo, hasta que vuelvas a automático.</span>
-              <button type="button" className="btn" onClick={() => { ejecutar('equipo/automatico', { equipoId }); mostrarToast('Listo, este equipo vuelve a actualizarse solo.'); setTimeout(recargar, 1500) }}>
-                Volver a automático (tabla y partidos de este equipo)
-              </button>
-            </section>
-          ) : null}
+          {NUBE_ACTIVA ? <span className="ayuda">Los equipos enlazados con la Rosarina se actualizan solos cada 2 horas; lo que pegues acá para ellos se reemplaza en la próxima lectura. Usá esta pantalla solo para equipos que no estén enlazados.</span> : null}
         </main>
       </SoloAdmin>
       <NavPanel actual="panel-mas" />

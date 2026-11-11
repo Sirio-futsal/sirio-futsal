@@ -88,8 +88,6 @@ function reductor(s, a) {
       const otras = (s.tablas || []).filter((t) => t.equipoId !== a.equipoId)
       return { ...s, tablas: [...otras, { equipoId: a.equipoId, filas: a.filas, actualizada: a.actualizada, fuente: 'manual' }] }
     }
-    case 'equipo/automatico':
-      return s
     case 'club/guardar':
       return { ...s, club: a.club }
     case 'galeria/agregar':
@@ -161,7 +159,6 @@ function permiso(tipo, datos, usuario, estado) {
     case 'equipo/entrenador':
     case 'equipo/foto':
     case 'tabla/guardar':
-    case 'equipo/automatico':
     case 'club/guardar':
     case 'galeria/agregar':
     case 'galeria/quitar':
