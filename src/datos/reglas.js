@@ -213,5 +213,5 @@ export function limpiarNombre(t) {
   const x = t
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
     .replace(/&([a-zA-Z]+);/g, (m, n) => ENTIDADES[n] ?? m)
-  return x.replace(/\b1\s*[º°]\s*de mayo\b/i, '1ro de Mayo')
+  return x.replace(/\b([A-ZÁÉÍÓÚÑ])([ÁÉÍÓÚÑ])([a-záéíóúñ]+)/g, (_, a, b, c) => a + b.toLowerCase() + c).replace(/\b1\s*[º°]\s*de mayo\b/i, '1ro de Mayo')
 }
