@@ -28,6 +28,14 @@ export function seccionesDisponibles(estado) {
   ].filter((s) => s.ok)
 }
 
+// Orden de las tablas: Masc. A (primera, reserva, inferiores), Masc. B (igual), Fem. B, Veteranos.
+const ORDEN_EQUIPOS = [
+  'masc-a-primera', 'masc-a-reserva', 'masc-a-inf-4ta', 'masc-a-inf-5ta', 'masc-a-inf-6ta', 'masc-a-inf-7ma', 'masc-a-inf-8va', 'masc-a-inf-9na',
+  'masc-b-primera', 'masc-b-reserva', 'masc-b-inf-4ta', 'masc-b-inf-5ta', 'masc-b-inf-6ta', 'masc-b-inf-7ma', 'masc-b-inf-8va', 'masc-b-inf-9na',
+  'fem-b-primera', 'fem-b-sub14', 'veteranos',
+]
+export const ordenEquipo = (id) => { const i = ORDEN_EQUIPOS.indexOf(id); return i < 0 ? 999 : i }
+
 export function MenuSecciones({ secciones }) {
   const ir = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   if (!secciones.length) return null
@@ -45,6 +53,7 @@ export function Posiciones() {
   const filas = (estado.tablas || [])
     .map((t) => ({ t, equipo: equipoPorId[t.equipoId] }))
     .filter((x) => x.equipo && filaDeSirio(x.t.filas))
+    .sort((a, b) => ordenEquipo(a.equipo.id) - ordenEquipo(b.equipo.id))
   if (!filas.length) return null
   return (
     <section id="posiciones" className="seccion ancla" aria-labelledby="t-posiciones">

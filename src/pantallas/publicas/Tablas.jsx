@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoVolver, NavPublica, TablaPosiciones, nombreEquipo, fechaCorta } from '../../componentes/comunes.jsx'
-import { filaDeSirio } from '../../datos/reglas.js'
+import { ordenEquipo } from './SeccionesClub.jsx'
 
 // Todas las tablas de posiciones en un solo lugar, con acceso rápido por equipo.
 export default function Tablas() {
@@ -9,7 +9,7 @@ export default function Tablas() {
   const items = (estado.tablas || [])
     .map((t) => ({ t, equipo: equipoPorId[t.equipoId] }))
     .filter((x) => x.equipo && x.t.filas && x.t.filas.length)
-    .sort((a, b) => (categoriaPorId[a.equipo.categoriaId]?.orden ?? 0) - (categoriaPorId[b.equipo.categoriaId]?.orden ?? 0))
+    .sort((a, b) => ordenEquipo(a.equipo.id) - ordenEquipo(b.equipo.id))
   const [sel, setSel] = useState(items[0]?.t.equipoId)
   const actual = items.find((x) => x.t.equipoId === sel) || items[0]
   return (
