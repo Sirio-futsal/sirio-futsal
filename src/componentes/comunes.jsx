@@ -5,6 +5,18 @@ import { NUBE_ACTIVA } from '../datos/nube.js'
 
 export const ESCUDO = 'escudo.png'
 
+// Escudo chico de un club. Todavía no hay escudos cargados: se muestran las iniciales. Sirio lleva el águila.
+export function inicialesClub(nombre) {
+  const limpio = String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 ]/g, ' ')
+  const palabras = limpio.split(/\s+/).filter((w) => w && !/^(de|del|la|el|club|atletico|c)$/i.test(w))
+  if (!palabras.length) return '?'
+  return (palabras.length > 1 ? palabras[0][0] + palabras[1][0] : palabras[0].slice(0, 2)).toUpperCase()
+}
+export function Chapa({ nombre }) {
+  if (/sirio/i.test(nombre || '')) return <img className="chapa chapa-img" src={ESCUDO} alt="" />
+  return <span className="chapa" aria-hidden="true">{inicialesClub(nombre)}</span>
+}
+
 // ---------- Íconos (trazo, heredan el color del texto) ----------
 const trazo = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }
 export const Icono = {
@@ -189,10 +201,12 @@ export function TarjetaPartido({ partido, mostrarFecha = false }) {
           <span className="chico suave" style={{ fontWeight: 600 }}>Hora a confirmar</span>
         )}
       </div>
-      <span className="rivales num">
+      <span className="rivales num rivales-chapas">
+        <Chapa nombre={local ? 'Sirio' : partido.rival} />
         {partido.estado === 'jugado'
           ? local ? `Sirio ${partido.golesSirio} – ${partido.golesRival} ${partido.rival}` : `${partido.rival} ${partido.golesRival} – ${partido.golesSirio} Sirio`
           : local ? `Sirio vs ${partido.rival}` : `${partido.rival} vs Sirio`}
+        <Chapa nombre={local ? partido.rival : 'Sirio'} />
       </span>
       <span className="chico suave">
         {mostrarFecha ? `${partido.fecha ? fechaCorta(partido.fecha) : `Fecha ${partido.ronda || ''} · a confirmar`.replace('  ', ' ')} · ` : ''}{local ? 'Local' : 'Visitante'} · {partido.cancha || 'Cancha a confirmar'}

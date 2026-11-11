@@ -129,6 +129,9 @@ a { color: var(--verde-texto); }
 .hora { font-family: var(--display); font-size: 22px; font-weight: 800; }
 .hora-tachada { font-size: 13px; color: var(--texto-suave); text-decoration: line-through; margin-right: 6px; }
 .rivales { font-size: 16px; font-weight: 600; }
+.rivales-chapas { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chapa { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--verde-tinte); color: var(--verde-tinte-texto); font-size: 11px; font-weight: 800; letter-spacing: .3px; border: 1px solid var(--borde, #dde3df); }
+.chapa-img { object-fit: contain; background: #0d0f0e; padding: 2px; border-color: transparent; }
 .insignia { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
 .insignia-alerta { color: var(--alerta); background: var(--alerta-tinte); }
 .insignia-ok { color: var(--verde-tinte-texto); background: var(--verde-tinte); }

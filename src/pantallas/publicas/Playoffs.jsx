@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
-import { EncabezadoPublico, NavPublica, Chips, Segmento, fechaLarga } from '../../componentes/comunes.jsx'
+import { EncabezadoPublico, NavPublica, Chips, Segmento, Chapa, fechaLarga } from '../../componentes/comunes.jsx'
 import { NOMBRE_HOJA, ordenCat } from '../../datos/planilla.js'
 
 const porHora = (a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99') || a.orden - b.orden
@@ -14,7 +14,7 @@ function Fila({ f }) {
         <span className="rotulo-verde">{f.torneo}{f.div ? ` · ${f.div}` : ''}</span>
         {f.hora ? <span className="hora num">{f.hora}</span> : <span className="chico suave" style={{ fontWeight: 600 }}>Hora a confirmar</span>}
       </div>
-      <span className="rivales num">{f.local} vs {f.visitante}</span>
+      <span className="rivales num rivales-chapas"><Chapa nombre={f.local} />{f.local} vs {f.visitante}<Chapa nombre={f.visitante} /></span>
       <span className="chico suave">{f.cancha ? `Cancha: ${f.cancha}` : 'Cancha a confirmar'}{f.instancia ? ` · ${f.instancia}` : ''}</span>
       {sirio ? <span className="insignia">Argentino Sirio</span> : null}
     </>
