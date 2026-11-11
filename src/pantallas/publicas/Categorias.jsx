@@ -59,8 +59,7 @@ export function DetalleCategoria({ id }) {
         ) : null}
         {cat.conFixture ? (
           <div className="pestanas" role="tablist">
-            <button type="button" role="tab" aria-selected={pestana === 'equipo'} onClick={() => setPestana('equipo')}>Equipo</button>
-            <button type="button" role="tab" aria-selected={pestana === 'tabla'} onClick={() => setPestana('tabla')}>Posiciones</button>
+            <button type="button" role="tab" aria-selected={pestana === 'equipo'} onClick={() => setPestana('equipo')}>Equipo y posiciones</button>
             <button type="button" role="tab" aria-selected={pestana === 'partidos'} onClick={() => setPestana('partidos')}>Partidos</button>
           </div>
         ) : null}
@@ -83,10 +82,7 @@ export function DetalleCategoria({ id }) {
                 <span style={{ fontWeight: 600 }}>{equipo.entrenador || 'A confirmar'}</span>
               </span>
             </div>
-          </>
-        ) : null}
-
-        {pestanaActiva === 'tabla' ? (
+          {cat.conFixture ? (
           <section className="seccion">
             <div className="seccion-cabeza">
               <h2 className="h2">Posiciones</h2>
@@ -99,6 +95,8 @@ export function DetalleCategoria({ id }) {
               </>
             ) : <div className="tarjeta vacio">La tabla de posiciones de este equipo todavía no está cargada.</div>}
           </section>
+          ) : null}
+          </>
         ) : null}
 
         {pestanaActiva === 'partidos' ? (
