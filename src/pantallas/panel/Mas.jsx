@@ -31,6 +31,7 @@ export function PanelMas() {
               <Item vista="panel-galeria" titulo="Galería de fotos" detalle="Subir y quitar fotos" cifra={(estado.galeria || []).length} />
               <Item vista="panel-club" titulo="Datos del club" detalle="Historia, contacto, sponsors y archivo" />
               <Item vista="panel-boletin" titulo="Jugadores en boletín" detalle="Cargar el boletín de la Rosarina" cifra={estado.boletin ? estado.boletin.jugadores.length : 0} />
+              <Item vista="panel-sync" titulo="Lectura automática" detalle="Estado de la Rosarina y del boletín" />
               <Item vista="panel-inscriptos" titulo="Inscripciones" detalle="Datos privados de las familias" cifra={estado.inscripciones.length} />
             </>
           ) : null}
