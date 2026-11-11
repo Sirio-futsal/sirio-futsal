@@ -1,0 +1,20 @@
+{
+ "name": "SIRIO FUTSAL",
+ "short_name": "SIRIO FUTSAL",
+ "start_url": "/",
+ "display": "standalone",
+ "background_color": "#0d0f0e",
+ "theme_color": "#0d0f0e",
+ "icons": [
+  {
+   "src": "/icono-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/icono-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

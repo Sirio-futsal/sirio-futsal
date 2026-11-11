@@ -165,7 +165,7 @@ export function Sumate() {
     const txt = [
       'Hola! Quiero jugar en Sirio Futsal.',
       `Nombre: ${f.nombre.trim()}`,
-      f.nacimiento ? `Fecha de nacimiento: ${f.nacimiento.split('-').reverse().join('/')}` : '',
+      f.nacimiento ? `Fecha de nacimiento: ${f.nacimiento}` : '',
       f.categoria ? `Categoría de interés: ${f.categoria}` : '',
       `Teléfono de contacto: ${f.telefono.trim()}`,
       f.mensaje.trim() ? `Comentario: ${f.mensaje.trim()}` : '',
@@ -179,7 +179,8 @@ export function Sumate() {
       <p style={{ margin: 0, fontSize: 14 }}>Completá tus datos y le llegan directo a la secretaría por WhatsApp.</p>
       <form className="form-sumate" onSubmit={enviar} style={{ display: 'grid', gap: 8 }}>
         <input style={campo} placeholder="Nombre y apellido" value={f.nombre} onChange={set('nombre')} autoComplete="name" required />
-        <input style={campo} type="date" aria-label="Fecha de nacimiento" value={f.nacimiento} onChange={set('nacimiento')} />
+        <input style={campo} inputMode="numeric" placeholder="Fecha de nacimiento (dd/mm/aaaa)" aria-label="Fecha de nacimiento" maxLength={10} value={f.nacimiento}
+          onChange={(e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 8); setF((x) => ({ ...x, nacimiento: [d.slice(0, 2), d.slice(2, 4), d.slice(4)].filter(Boolean).join('/') })) }} />
         <select style={campo} aria-label="Categoría" value={f.categoria} onChange={set('categoria')}>
           <option value="">Categoría (si no sabés, dejalo así)</option>
           {(categorias || []).map((c) => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
