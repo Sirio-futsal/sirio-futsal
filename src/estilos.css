@@ -249,3 +249,17 @@ textarea.control { padding: 10px 12px; min-height: 96px; resize: vertical; }
 .carrusel-flecha.izq { right: 52px; }
 .carrusel-flecha.der { right: 12px; }
 .carrusel-slide .seccion-cabeza:first-child { padding-right: 96px; }
+
+.pos-tabla { padding: 0; overflow: hidden; }
+.pos-fila { display: grid; grid-template-columns: minmax(0, 1fr) 64px 56px 34px; align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; }
+.pos-cabeza { background: var(--superficie-2); font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--texto-suave); padding-top: 8px; padding-bottom: 8px; }
+.pos-dato { border-top: 1px solid var(--borde); cursor: pointer; }
+.pos-dato:nth-child(even) { background: var(--superficie-2); }
+.pos-fila .c { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.pos-nombre { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pos-nombre b { font-size: 15px; line-height: 1.2; }
+.pos-puesto { min-width: 42px; padding: 4px 8px; border-radius: 10px; background: var(--barra); color: var(--dorado); font-family: var(--display); font-size: 22px; font-weight: 800; line-height: 1; }
+.pos-puesto.top { background: var(--dorado); color: #0d0f0e; }
+.pos-de { margin-top: 2px; }
+.pos-pts { font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1; color: var(--verde-texto); }
+.pos-pj { color: var(--texto-suave); font-weight: 600; }

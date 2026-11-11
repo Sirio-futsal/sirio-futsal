@@ -63,17 +63,28 @@ export function Posiciones() {
         <h2 id="t-posiciones" className="h2">Cómo viene Sirio</h2>
         <span className="mini suave">Tabla de posiciones</span>
       </div>
-      <div className="lista">
-        {filas.map(({ t, equipo }) => (
-          <button key={t.equipoId} type="button" className="fila fila-btn" onClick={() => ir(`categoria-${equipo.categoriaId}`)}>
-            <span className="crece">
-              <span style={{ fontWeight: 600 }}>{nombreEquipo(equipo, categoriaPorId)}</span>
-              <span className="mini suave">{t.fuente === 'arf' ? 'Actualizada automáticamente · ' : 'Actualizada el '}{fechaCorta(t.actualizada)}</span>
-            </span>
-            <span className="num" style={{ fontWeight: 700 }}>{posicionSirioTexto(t.filas)}</span>
-            <span className="chev" aria-hidden="true">›</span>
-          </button>
-        ))}
+      <div className="tarjeta pos-tabla" role="table" aria-label="Posición de Sirio en cada categoría">
+        <div className="pos-fila pos-cabeza" role="row">
+          <span role="columnheader">Categoría</span>
+          <span role="columnheader" className="c">Puesto</span>
+          <span role="columnheader" className="c">Puntos</span>
+          <span role="columnheader" className="c">PJ</span>
+        </div>
+        {filas.map(({ t, equipo }) => {
+          const f = filaDeSirio(t.filas)
+          const total = t.filas.length
+          return (
+            <button key={t.equipoId} type="button" role="row" className="pos-fila pos-dato" onClick={() => ir(`categoria-${equipo.categoriaId}`)}>
+              <span role="cell" className="pos-nombre">
+                <b>{nombreEquipo(equipo, categoriaPorId, true)}</b>
+                <span className="mini suave">{t.fuente === 'arf' ? 'Automática' : 'Actualizada'} · {fechaCorta(t.actualizada)}</span>
+              </span>
+              <span role="cell" className="c"><span className={`pos-puesto${Number(f.pos) <= 3 ? ' top' : ''}`}>{f.pos}º</span><span className="mini suave pos-de">de {total}</span></span>
+              <span role="cell" className="c"><span className="pos-pts">{f.pts}</span></span>
+              <span role="cell" className="c pos-pj">{f.pj ?? '–'}</span>
+            </button>
+          )
+        })}
       </div>
     </section>
   )
