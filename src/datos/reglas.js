@@ -156,3 +156,12 @@ export function enlaceWhatsapp(numero) {
   if (!d.startsWith('54')) d = `549${d}`
   return `https://wa.me/${d}`
 }
+
+// Foto del día: con varias fotos cargadas, cada equipo muestra una distinta cada 24 hs (rota sola según la fecha).
+export function fotoDelDia(equipo, hoyISO) {
+  const pool = [...new Set([equipo.fotoUrl, ...(equipo.fotos || [])].filter(Boolean))]
+  if (!pool.length) return null
+  const dias = Math.floor(Date.parse(`${hoyISO}T00:00:00Z`) / 86400000)
+  const desfase = [...String(equipo.id)].reduce((n, ch) => n + ch.charCodeAt(0), 0)
+  return pool[(dias + desfase) % pool.length]
+}

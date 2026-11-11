@@ -84,6 +84,11 @@ function reductor(s, a) {
       const nuevo = { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, fotoUrl: a.url || null, fotoCargada: !!a.url, ...(typeof e.fotoPublicable === 'boolean' ? { fotoPublicable: false } : {}) } : e)) }
       return conFotoRecalculada(nuevo, a.equipoId)
     }
+    case 'equipo/fotos': {
+      const fotos = a.fotos || []
+      const nuevo = { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, fotos, fotoUrl: fotos[0] || null, fotoCargada: fotos.length > 0, ...(typeof e.fotoPublicable === 'boolean' ? { fotoPublicable: false } : {}) } : e)) }
+      return conFotoRecalculada(nuevo, a.equipoId)
+    }
     case 'tabla/guardar': {
       const otras = (s.tablas || []).filter((t) => t.equipoId !== a.equipoId)
       return { ...s, tablas: [...otras, { equipoId: a.equipoId, filas: a.filas, actualizada: a.actualizada, fuente: 'manual' }] }
@@ -158,6 +163,7 @@ function permiso(tipo, datos, usuario, estado) {
       return R.puedeCargarBoletin(usuario) || 'Solo la administradora carga el boletín.'
     case 'equipo/entrenador':
     case 'equipo/foto':
+    case 'equipo/fotos':
     case 'tabla/guardar':
     case 'club/guardar':
     case 'galeria/agregar':

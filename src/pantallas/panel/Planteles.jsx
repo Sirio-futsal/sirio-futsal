@@ -73,28 +73,27 @@ export default function PanelPlanteles() {
       setEntrenador(null)
     }
   }
-  const cambiarFoto = async (e) => {
-    const archivo = e.target.files?.[0]
+  const pool = [...new Set([equipo.fotoUrl, ...(equipo.fotos || [])].filter(Boolean))]
+  const agregarFotos = async (e) => {
+    const archivos = [...(e.target.files || [])]
     e.target.value = ''
-    if (!archivo) return
+    if (!archivos.length) return
     setSubiendo(true)
+    const urls = []
     try {
-      const url = await subirImagen(archivo, `equipos/${equipo.id}`)
-      const anterior = equipo.fotoUrl
-      if (ejecutar('equipo/foto', { equipoId: equipo.id, url })) {
-        if (anterior) borrarImagen(anterior)
-        mostrarToast('Foto del equipo guardada.')
-      }
+      for (const f of archivos) urls.push(await subirImagen(f, `equipos/${equipo.id}`))
     } catch (err) {
-      mostrarToast(err.message || 'No se pudo subir la foto.', 'error')
+      mostrarToast(err.message || 'No se pudo subir alguna foto.', 'error')
+    }
+    if (urls.length && ejecutar('equipo/fotos', { equipoId: equipo.id, fotos: [...pool, ...urls] })) {
+      mostrarToast(urls.length === 1 ? 'Foto agregada.' : `${urls.length} fotos agregadas.`)
     }
     setSubiendo(false)
   }
-  const quitarFoto = () => {
-    const anterior = equipo.fotoUrl
-    if (ejecutar('equipo/foto', { equipoId: equipo.id, url: null })) {
-      if (anterior) borrarImagen(anterior)
-      mostrarToast('Foto del equipo quitada.')
+  const quitarFoto = (url) => {
+    if (ejecutar('equipo/fotos', { equipoId: equipo.id, fotos: pool.filter((u) => u !== url) })) {
+      borrarImagen(url)
+      mostrarToast('Foto quitada.')
     }
   }
 
@@ -140,13 +139,22 @@ export default function PanelPlanteles() {
           )}
           {admin ? (
             <div className="seccion">
-              {equipo.fotoUrl ? <img src={equipo.fotoUrl} alt="Foto actual del equipo" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 10 }} /> : null}
+              {pool.length ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {pool.map((u) => (
+                    <div key={u} style={{ position: 'relative' }}>
+                      <img src={u} alt="Foto del equipo" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10 }} />
+                      <button type="button" aria-label="Quitar foto" onClick={() => quitarFoto(u)}
+                        style={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, borderRadius: '50%', border: 0, background: 'rgba(0,0,0,.7)', color: '#fff', fontSize: 16 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               <label className="btn btn-secundario" style={{ textAlign: 'center', cursor: subiendo ? 'wait' : 'pointer' }}>
-                {subiendo ? 'Subiendo…' : equipo.fotoUrl ? 'Cambiar foto del equipo' : 'Subir foto del equipo'}
-                <input type="file" accept="image/*" onChange={cambiarFoto} disabled={subiendo} style={{ display: 'none' }} />
+                {subiendo ? 'Subiendo…' : pool.length ? 'Agregar más fotos' : 'Subir fotos del equipo'}
+                <input type="file" accept="image/*" multiple onChange={agregarFotos} disabled={subiendo} style={{ display: 'none' }} />
               </label>
-              {equipo.fotoUrl ? <button type="button" className="btn btn-peligro" onClick={quitarFoto}>Quitar foto</button> : null}
-              <span className="ayuda">Solo se publica cuando todos los jugadores del equipo tienen autorización para aparecer en fotos.</span>
+              <span className="ayuda">Podés subir varias: la app muestra una distinta cada 24 hs. Solo se publican cuando todos los jugadores del equipo tienen autorización para aparecer en fotos.</span>
             </div>
           ) : null}
         </section>

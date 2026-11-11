@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, TarjetaPartido, TablaPosiciones, ordenarPartidos, nombreEquipo, fechaCorta } from '../../componentes/comunes.jsx'
-import { fotoEquipoPublicable } from '../../datos/reglas.js'
+import { fotoEquipoPublicable, fotoDelDia } from '../../datos/reglas.js'
 
 export function ListaCategorias() {
   const { estado, ir, categorias } = useApp()
@@ -68,7 +68,7 @@ export function DetalleCategoria({ id }) {
           <>
             <figure className="tarjeta foto-equipo">
               {foto && equipo.fotoUrl ? (
-                <img src={equipo.fotoUrl} alt={`Foto del equipo ${nombreEquipo(equipo, categoriaPorId)}`} />
+                <img src={fotoDelDia(equipo, hoyISO)} alt={`Foto del equipo ${nombreEquipo(equipo, categoriaPorId)}`} />
               ) : (
                 <div className="rayado">
                   {foto ? 'Foto del equipo (ejemplo)' : equipo.fotoCargada ? 'La foto del equipo se publica cuando todos tengan autorización de imagen.' : 'Foto del equipo pendiente de carga.'}

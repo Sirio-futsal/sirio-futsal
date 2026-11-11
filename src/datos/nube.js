@@ -48,7 +48,7 @@ const aAviso = (r) => ({ id: r.id, tipo: r.tipo, equipoId: r.equipo_id, categori
 
 const aEquipo = (r) => ({
   id: r.id, categoriaId: r.categoria_id, nombre: r.nombre, grupo: r.grupo, ...(r.division ? { division: r.division } : {}),
-  entrenador: r.entrenador || '', fotoUrl: r.foto_url || null, fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable,
+  entrenador: r.entrenador || '', fotoUrl: r.foto_url || null, fotos: r.fotos || [], fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable,
 })
 const aClub = (r) => ({
   historia: r.historia || '', direccion: r.direccion || '', telefono: r.telefono || '', whatsapp: r.whatsapp || '',
@@ -104,9 +104,9 @@ export async function cargarTodo(preferencias) {
       const privados = await c.from('jugadores').select('*').then(revisar)
       privados.forEach((r) => jugadores.set(r.id, aJugador(r)))
       // El personal ve la foto de sus equipos aunque todavía no se pueda publicar.
-      const propios = await c.from('equipos').select('id, foto_url').then(revisar)
-      const urls = new Map(propios.map((r) => [r.id, r.foto_url]))
-      equipos = equipos.map((e) => (urls.has(e.id) ? { ...e, fotoUrl: urls.get(e.id) || null, fotoCargada: !!urls.get(e.id) } : e))
+      const propios = await c.from('equipos').select('id, foto_url, fotos').then(revisar)
+      const urls = new Map(propios.map((r) => [r.id, r]))
+      equipos = equipos.map((e) => (urls.has(e.id) ? { ...e, fotoUrl: urls.get(e.id).foto_url || null, fotos: urls.get(e.id).fotos || [], fotoCargada: !!urls.get(e.id).foto_url } : e))
       avisosEnviados = (await c.from('avisos_enviados').select('*').order('creado', { ascending: false }).limit(30).then(revisar)).map(aAviso)
       if (yo.rol === 'admin') {
         const [inv, sug, ins] = await Promise.all([
@@ -140,7 +140,7 @@ export async function cargarTodo(preferencias) {
 export const ACCIONES_NUBE = new Set([
   'partido/guardar', 'noticia/crear', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
-  'equipo/entrenador', 'equipo/foto', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
+  'equipo/entrenador', 'equipo/foto', 'equipo/fotos', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
 ])
 
 const esInvitacion = (id) => String(id).startsWith('inv-')
@@ -202,6 +202,8 @@ export async function escribir(tipo, a, previo) {
     }
     case 'equipo/entrenador':
       return revisar(await c.from('equipos').update({ entrenador: a.entrenador.trim() || null }).eq('id', a.equipoId))
+    case 'equipo/fotos':
+      return revisar(await c.from('equipos').update({ fotos: a.fotos || [], foto_url: (a.fotos || [])[0] || null, foto_cargada: (a.fotos || []).length > 0 }).eq('id', a.equipoId))
     case 'equipo/foto':
       return revisar(await c.from('equipos').update({ foto_url: a.url || null, foto_cargada: !!a.url }).eq('id', a.equipoId))
     case 'tabla/guardar':
