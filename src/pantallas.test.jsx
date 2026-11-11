@@ -19,8 +19,8 @@ function montar(vista, sesion = null) {
 beforeEach(() => window.localStorage.clear())
 afterEach(() => cleanup())
 
-const publicas = ['inicio', 'fixture', 'categorias', 'categoria-masc-a', 'categoria-fem-b', 'categoria-escuelita', 'noticias', 'noticia-n1', 'mas', 'avisos', 'partido-p1', 'partido-p7']
-const panel = ['panel', 'panel-partidos', 'panel-noticias', 'panel-planteles', 'panel-mas', 'panel-entrenadores', 'panel-rosarina', 'panel-inscriptos', 'panel-aviso', 'panel-boletin']
+const publicas = ['inicio', 'fixture', 'categorias', 'categoria-masc-a', 'categoria-fem-b', 'categoria-escuelita', 'noticias', 'noticia-n1', 'mas', 'avisos', 'galeria', 'partido-p1', 'partido-p7']
+const panel = ['panel', 'panel-partidos', 'panel-noticias', 'panel-planteles', 'panel-mas', 'panel-entrenadores', 'panel-rosarina', 'panel-inscriptos', 'panel-aviso', 'panel-boletin', 'panel-tablas', 'panel-club', 'panel-galeria']
 
 describe('todas las pantallas se abren sin errores', () => {
   for (const v of publicas) {
@@ -42,12 +42,33 @@ describe('todas las pantallas se abren sin errores', () => {
 })
 
 describe('privacidad y permisos en pantalla', () => {
-  it('el plantel público no muestra jugadoras sin autorización', () => {
+  it('la categoría no publica lista de jugadores y muestra el entrenador', () => {
+    const { container } = montar('categoria-masc-a')
+    expect(screen.getByText('Nombre del entrenador (ejemplo)')).toBeTruthy()
+    expect(container.textContent).not.toMatch(/Herrera|Benítez|Plantel/)
+  })
+  it('la foto del equipo no se publica si falta alguna autorización de imagen', () => {
     montar('categoria-fem-b')
     fireEvent.click(screen.getByRole('button', { name: 'Sub-14' }))
     expect(screen.queryByText(/Agustina/)).toBeNull()
-    expect(screen.getByText('Juana P.')).toBeTruthy()
     expect(screen.getByText(/se publica cuando todos tengan autorización/)).toBeTruthy()
+  })
+  it('la pestaña Posiciones muestra la tabla con Sirio resaltado', () => {
+    const { container } = montar('categoria-masc-a')
+    fireEvent.click(screen.getByRole('tab', { name: 'Posiciones' }))
+    expect(container.querySelector('tr.sirio')).toBeTruthy()
+  })
+  it('la administradora carga una tabla pegada de la Rosarina', () => {
+    montar('panel-tablas', 'admin')
+    fireEvent.change(screen.getByLabelText('Filas de la tabla'), { target: { value: '1 Rival X 5 4 1 0 12 3 9 13\n2 Argentino Sirio 5 3 1 1 9 5 4 10' } })
+    expect(screen.getByText('Leí 2 equipos')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar y publicar' }))
+    const guardado = JSON.parse(window.localStorage.getItem(CLAVE))
+    expect(guardado.tablas.find((t) => t.equipoId === 'masc-a-primera').filas).toHaveLength(2)
+  })
+  it('el entrenador no puede cargar tablas ni datos del club', () => {
+    montar('panel-tablas', 'e1')
+    expect(screen.getByText('Esta sección es solo para la administradora.')).toBeTruthy()
   })
   it('el Inicio muestra los jugadores del boletín solo con nombre y apellido', () => {
     const { container } = montar('inicio')

@@ -22,19 +22,6 @@ export default function Mas() {
     <>
       <EncabezadoPublico />
       <main className="contenido g">
-        <section className="tarjeta seccion" style={{ padding: 14 }}>
-          <div className="seccion-cabeza">
-            <h2 className="h2">Galería</h2>
-            <span className="mini suave">Fotos y videos del club</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-            <div className="rayado" style={{ aspectRatio: '1', borderRadius: 10, maxWidth: '100%' }} />
-            <div className="rayado" style={{ aspectRatio: '1', borderRadius: 10, maxWidth: '100%' }} />
-            <div className="rayado" style={{ aspectRatio: '1', borderRadius: 10, maxWidth: '100%', fontSize: 11 }}>Video de YouTube</div>
-          </div>
-          <span className="mini suave">Los álbumes se cargan desde el panel. Los videos se publican en YouTube y se enlazan acá.</span>
-        </section>
-
         <section className="hero" style={{ background: 'var(--accion)', color: 'var(--accion-texto)' }}>
           <h2 className="h2" style={{ fontSize: 26 }}>¿Querés jugar en Sirio?</h2>
           <p style={{ margin: 0, fontSize: 14 }}>Dejanos tus datos y te contactamos con la categoría que corresponda.</p>
@@ -69,10 +56,6 @@ export default function Mas() {
         </form>
 
         <div className="lista">
-          <div className="fila">
-            {Icono.ubicacion({ style: { color: 'var(--verde-texto)' } })}
-            <span className="crece"><span style={{ fontWeight: 600 }}>Club y contacto</span><span className="mini suave">[Dirección del club] · [Teléfono o WhatsApp]</span></span>
-          </div>
           <button type="button" className="fila fila-btn" onClick={() => ir('avisos')}>
             {Icono.campana({ width: 22, height: 22, style: { color: 'var(--verde-texto)' } })}
             <span className="crece" style={{ fontWeight: 600 }}>Avisos e instalar la app</span>

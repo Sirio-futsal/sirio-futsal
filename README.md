@@ -2,7 +2,7 @@
 
 App (PWA) del futsal del Club Argentino Sirio, Rosario.
 
-Estado: **versión de prueba** con datos de ejemplo. Todavía no está conectada a ninguna base de datos ni cuenta.
+Estado: app conectada a Supabase (`npm run dev` y `npm run build`). `npm test` y `npm run build:prueba` usan datos de ejemplo.
 
 ## Qué hay
 
@@ -21,6 +21,10 @@ npm test               # pruebas automáticas (reglas y pantallas)
 npm run build          # versión para publicar en Cloudflare Pages
 npm run build:prueba   # página única para la versión de prueba
 ```
+
+## Actualización 2 (tablas, galería y datos del club)
+
+Si ya corriste `esquema.sql` antes, pegá `supabase/migracion-2.sql` en el SQL Editor y tocá *Run* (una sola vez, es seguro repetirlo). Agrega: entrenador y foto por equipo, tablas de posiciones, datos del club, galería y el almacén de imágenes. Desde esa actualización la app **no publica listas de jugadores**: solo el nombre del entrenador y la foto del equipo (que se muestra únicamente si todos los jugadores autorizaron su imagen).
 
 ## Conectar con Supabase (etapas 5 y 6, ya incluidas en el código)
 

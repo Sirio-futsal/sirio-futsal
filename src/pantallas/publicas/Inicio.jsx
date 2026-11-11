@@ -1,6 +1,7 @@
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, NavPublica, ESCUDO, TarjetaPartido, fechaCorta, nombreEquipo, iniciales, ordenarPartidos } from '../../componentes/comunes.jsx'
 import { resultadoSirio } from '../../datos/reglas.js'
+import { MenuSecciones, seccionesDisponibles, Posiciones, Galeria, Archivo, Historia, Sponsors, Indumentaria, Sumate, Contacto } from './SeccionesClub.jsx'
 
 export default function Inicio() {
   const { estado, ir, hoyISO, equipoPorId, categoriaPorId } = useApp()
@@ -8,11 +9,13 @@ export default function Inicio() {
   const proximo = proximos[0]
   const resultados = ordenarPartidos(estado.partidos.filter((p) => resultadoSirio(p)), false).slice(0, 3)
   const noticia = estado.noticias[0]
+  const secciones = seccionesDisponibles(estado)
 
   return (
     <>
       <EncabezadoPublico />
       <main className="contenido g">
+        <MenuSecciones secciones={secciones} />
         {proximo ? (
           <section className="hero" aria-label="Próximo partido">
             <div className="seccion-cabeza" style={{ alignItems: 'center' }}>
@@ -74,7 +77,7 @@ export default function Inicio() {
         ) : null}
 
         {noticia ? (
-          <section className="seccion">
+          <section id="novedades" className="seccion ancla">
             <div className="seccion-cabeza">
               <h2 className="h2">Novedades</h2>
               <button type="button" className="link-btn" onClick={() => ir('noticias')}>Ver todas</button>
@@ -88,8 +91,9 @@ export default function Inicio() {
             </button>
           </section>
         ) : null}
+        <Posiciones />
         {estado.boletin && estado.boletin.jugadores.length ? (
-          <section className="seccion" aria-labelledby="titulo-boletin">
+          <section id="boletin" className="seccion ancla" aria-labelledby="titulo-boletin">
             <div className="seccion-cabeza">
               <h2 id="titulo-boletin" className="h2">Jugadores en boletín</h2>
               <span className="mini suave">Boletín {estado.boletin.numero} · {fechaCorta(estado.boletin.fecha)}</span>
@@ -102,6 +106,13 @@ export default function Inicio() {
             <span className="mini suave">Según el boletín del Tribunal Disciplinario de la Asociación Rosarina de Fútbol.</span>
           </section>
         ) : null}
+        <Galeria />
+        <Archivo />
+        <Historia />
+        <Sponsors />
+        <Indumentaria />
+        <Sumate />
+        <Contacto />
       </main>
       <NavPublica actual="inicio" />
     </>

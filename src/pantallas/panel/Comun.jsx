@@ -31,7 +31,7 @@ export function NavPanel({ actual }) {
     ['panel', 'Pendientes', Icono.check],
     ['panel-partidos', 'Partidos', Icono.calendario],
     ['panel-noticias', 'Publicar', Icono.mas2],
-    ['panel-planteles', 'Planteles', Icono.personas],
+    ['panel-planteles', 'Equipos', Icono.personas],
     ['panel-mas', 'Más', Icono.mas],
   ]
   return (

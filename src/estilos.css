@@ -207,3 +207,20 @@ textarea.control { padding: 10px 12px; min-height: 96px; resize: vertical; }
 .dorsal { width: 32px; font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--verde-texto); text-align: center; flex-shrink: 0; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ---------- Tabla de posiciones, inicio por secciones y galería ---------- */
+.tabla-scroll { overflow-x: auto; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
+.tabla-pos { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 380px; }
+.tabla-pos th, .tabla-pos td { padding: 9px 4px; text-align: center; white-space: nowrap; }
+.tabla-pos th { font-size: 11px; font-weight: 700; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--borde); }
+.tabla-pos td.eq, .tabla-pos th.eq { text-align: left; padding-left: 6px; white-space: normal; min-width: 104px; }
+.tabla-pos tbody tr + tr td { border-top: 1px solid var(--borde); }
+.tabla-pos td.pts { font-weight: 800; }
+.tabla-pos tr.sirio td { background: var(--verde-tinte); color: var(--verde-tinte-texto); font-weight: 700; }
+.ancla { scroll-margin-top: 76px; }
+.menu-secciones { position: sticky; top: 0; z-index: 4; background: var(--fondo); padding: 8px 0; margin: 0 -2px; }
+.galeria-grilla { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.galeria-grilla a { display: block; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--rayado-a); }
+.galeria-grilla img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-equipo img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+.texto-largo { white-space: pre-line; margin: 0; line-height: 1.55; font-size: 14px; }

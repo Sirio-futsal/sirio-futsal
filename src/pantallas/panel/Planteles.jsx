@@ -2,51 +2,44 @@ import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPanel, NavPanel } from './Comun.jsx'
 import { Interruptor, nombreEquipo } from '../../componentes/comunes.jsx'
-import { esAdmin, equiposEditables, jugadorVisible, nombrePublico, puedeAparecerEnFotos, fotoEquipoPublicable } from '../../datos/reglas.js'
+import { esAdmin, equiposEditables, puedeAparecerEnFotos, fotoEquipoPublicable } from '../../datos/reglas.js'
+import { subirImagen, borrarImagen } from '../../datos/nube.js'
 
 function estadoAut(j) {
-  if (!jugadorVisible(j)) return { texto: 'Sin autorización', clase: 'insignia-alerta' }
-  const nombre = j.autorizacion.nombre === 'completo' ? 'completo' : 'corto'
-  return { texto: `Fotos: ${j.autorizacion.imagen ? 'sí' : 'no'} · Nombre: ${nombre}`, clase: j.autorizacion.imagen ? 'insignia-ok' : 'insignia-alerta' }
+  return puedeAparecerEnFotos(j)
+    ? { texto: 'Autoriza aparecer en fotos', clase: 'insignia-ok' }
+    : { texto: 'Sin autorización de fotos', clase: 'insignia-alerta' }
 }
 
 function EditorAutorizacion({ j, alCerrar }) {
   const { ejecutar, mostrarToast } = useApp()
-  const [nombre, setNombre] = useState(j.autorizacion.nombre || 'ninguno')
-  const [imagen, setImagen] = useState(!!j.autorizacion.imagen)
+  const [imagen, setImagen] = useState(puedeAparecerEnFotos(j))
   const [fecha, setFecha] = useState(j.autorizacion.fecha || '')
-  const previa = { ...j, autorizacion: { nombre: nombre === 'ninguno' ? null : nombre, imagen: nombre === 'ninguno' ? false : imagen, fecha } }
   const guardar = () => {
-    if (nombre !== 'ninguno' && !fecha) {
+    if (imagen && !fecha) {
       mostrarToast('Indicá la fecha en que se firmó la autorización.', 'error')
       return
     }
-    if (ejecutar('jugador/autorizacion', { jugadorId: j.id, autorizacion: previa.autorizacion })) {
+    const autorizacion = imagen ? { nombre: 'corto', imagen: true, fecha } : { nombre: null, imagen: false, fecha: null }
+    if (ejecutar('jugador/autorizacion', { jugadorId: j.id, autorizacion })) {
       mostrarToast('Autorización guardada.')
       alCerrar()
     }
   }
   return (
     <div className="form" style={{ paddingTop: 4 }}>
-      <div className="campo">
-        <label htmlFor={`aut-nom-${j.id}`}>Nombre que se publica</label>
-        <select id={`aut-nom-${j.id}`} className="control" value={nombre} onChange={(e) => setNombre(e.target.value)}>
-          <option value="ninguno">No aparece en el plantel</option>
-          <option value="corto">{j.nombre} {j.apellido.charAt(0)}.</option>
-          <option value="completo">{j.nombre} {j.apellido}</option>
-        </select>
-      </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ fontWeight: 600, fontSize: 14 }}>Autoriza aparecer en fotos</span>
-        <Interruptor activo={nombre !== 'ninguno' && imagen} etiqueta="Autoriza aparecer en fotos" onCambio={(v) => setImagen(v)} />
+        <span style={{ fontWeight: 600, fontSize: 14 }}>Autoriza aparecer en fotos y videos del club</span>
+        <Interruptor activo={imagen} etiqueta="Autoriza aparecer en fotos" onCambio={setImagen} />
       </div>
-      <div className="campo">
-        <label htmlFor={`aut-fecha-${j.id}`}>Autorización firmada el</label>
-        <input id={`aut-fecha-${j.id}`} type="date" className="control" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-      </div>
+      {imagen ? (
+        <div className="campo">
+          <label htmlFor={`aut-fecha-${j.id}`}>Autorización firmada el</label>
+          <input id={`aut-fecha-${j.id}`} type="date" className="control" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </div>
+      ) : null}
       <span className="ayuda">
-        Así se va a ver: {nombrePublico(previa) ? `"${nombrePublico(previa)}" en el plantel` : 'no aparece en el plantel'}
-        {puedeAparecerEnFotos(previa) ? ' y puede figurar en fotos.' : ' y no puede figurar en fotos publicadas.'}
+        {imagen ? 'Puede figurar en la foto del equipo y en la galería.' : 'Mientras falte esta autorización, la foto del equipo no se publica.'}
       </span>
       <div className="grilla-2">
         <button type="button" className="btn btn-secundario" onClick={alCerrar}>Cancelar</button>
@@ -63,14 +56,47 @@ export default function PanelPlanteles() {
   const [equipoId, setEquipoId] = useState(mios.find((e) => estado.jugadores.some((j) => j.equipoId === e.id))?.id || mios[0]?.id)
   const [abierto, setAbierto] = useState(null)
   const [soloPend, setSoloPend] = useState(false)
+  const [entrenador, setEntrenador] = useState(null)
+  const [subiendo, setSubiendo] = useState(false)
   const [nuevo, setNuevo] = useState({ nombre: '', apellido: '', dorsal: '', posicion: '', esMenor: true })
 
   const equipo = mios.find((e) => e.id === equipoId)
   if (!equipo) return null
   const jugadores = estado.jugadores.filter((j) => j.equipoId === equipo.id).sort((a, b) => a.dorsal - b.dorsal)
-  const pendientes = jugadores.filter((j) => !jugadorVisible(j) || !puedeAparecerEnFotos(j))
+  const pendientes = jugadores.filter((j) => !puedeAparecerEnFotos(j))
   const lista = soloPend ? pendientes : jugadores
   const foto = fotoEquipoPublicable(equipo, jugadores)
+
+  const guardarEntrenador = () => {
+    if (ejecutar('equipo/entrenador', { equipoId: equipo.id, entrenador: (entrenador ?? equipo.entrenador ?? '').trim() })) {
+      mostrarToast('Entrenador guardado.')
+      setEntrenador(null)
+    }
+  }
+  const cambiarFoto = async (e) => {
+    const archivo = e.target.files?.[0]
+    e.target.value = ''
+    if (!archivo) return
+    setSubiendo(true)
+    try {
+      const url = await subirImagen(archivo, `equipos/${equipo.id}`)
+      const anterior = equipo.fotoUrl
+      if (ejecutar('equipo/foto', { equipoId: equipo.id, url })) {
+        if (anterior) borrarImagen(anterior)
+        mostrarToast('Foto del equipo guardada.')
+      }
+    } catch (err) {
+      mostrarToast(err.message || 'No se pudo subir la foto.', 'error')
+    }
+    setSubiendo(false)
+  }
+  const quitarFoto = () => {
+    const anterior = equipo.fotoUrl
+    if (ejecutar('equipo/foto', { equipoId: equipo.id, url: null })) {
+      if (anterior) borrarImagen(anterior)
+      mostrarToast('Foto del equipo quitada.')
+    }
+  }
 
   const agregar = (e) => {
     e.preventDefault()
@@ -82,7 +108,7 @@ export default function PanelPlanteles() {
       jugador: { equipoId: equipo.id, nombre: nuevo.nombre.trim(), apellido: nuevo.apellido.trim(), dorsal: Number(nuevo.dorsal) || 0, posicion: nuevo.posicion.trim() || '—', esMenor: nuevo.esMenor, autorizacion: { nombre: null, imagen: false, fecha: null } },
     })
     if (ok) {
-      mostrarToast(admin ? 'Jugador agregado. Falta cargar su autorización.' : 'Jugador agregado. La administradora tiene que cargar su autorización para que aparezca.')
+      mostrarToast(admin ? 'Jugador agregado. Falta cargar su autorización de fotos.' : 'Jugador agregado. La administradora tiene que cargar su autorización de fotos.')
       setNuevo({ nombre: '', apellido: '', dorsal: '', posicion: '', esMenor: nuevo.esMenor })
     }
   }
@@ -91,13 +117,39 @@ export default function PanelPlanteles() {
     <>
       <EncabezadoPanel />
       <main className="contenido g">
-        <h1 className="h1">Plantel</h1>
+        <h1 className="h1">Equipo</h1>
         <div className="campo">
           <label htmlFor="pl-equipo">Equipo</label>
           <select id="pl-equipo" className="control" value={equipo.id} onChange={(e) => { setEquipoId(e.target.value); setAbierto(null) }}>
             {mios.map((e) => <option key={e.id} value={e.id}>{nombreEquipo(e, categoriaPorId)}</option>)}
           </select>
         </div>
+
+        <section className="tarjeta seccion" style={{ padding: 14 }}>
+          <h2 className="h2" style={{ fontSize: 20 }}>Lo que se ve en la app</h2>
+          {admin ? (
+            <div className="campo">
+              <label htmlFor="eq-entrenador">Entrenador (se publica su nombre)</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input id="eq-entrenador" className="control" style={{ flex: 1 }} value={entrenador ?? equipo.entrenador ?? ''} onChange={(e) => setEntrenador(e.target.value)} autoComplete="off" />
+                <button type="button" className="btn btn-primario" onClick={guardarEntrenador}>Guardar</button>
+              </div>
+            </div>
+          ) : (
+            <span className="chico">Entrenador: <b>{equipo.entrenador || 'sin cargar'}</b></span>
+          )}
+          {admin ? (
+            <div className="seccion">
+              {equipo.fotoUrl ? <img src={equipo.fotoUrl} alt="Foto actual del equipo" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 10 }} /> : null}
+              <label className="btn btn-secundario" style={{ textAlign: 'center', cursor: subiendo ? 'wait' : 'pointer' }}>
+                {subiendo ? 'Subiendo…' : equipo.fotoUrl ? 'Cambiar foto del equipo' : 'Subir foto del equipo'}
+                <input type="file" accept="image/*" onChange={cambiarFoto} disabled={subiendo} style={{ display: 'none' }} />
+              </label>
+              {equipo.fotoUrl ? <button type="button" className="btn btn-peligro" onClick={quitarFoto}>Quitar foto</button> : null}
+              <span className="ayuda">Solo se publica cuando todos los jugadores del equipo tienen autorización para aparecer en fotos.</span>
+            </div>
+          ) : null}
+        </section>
 
         <div className="tarjeta fila" style={{ alignItems: 'flex-start' }}>
           <span className="crece">
@@ -109,6 +161,10 @@ export default function PanelPlanteles() {
           <span className={`insignia ${foto ? 'insignia-ok' : 'insignia-alerta'}`}>{foto ? 'Publicada' : 'No publicada'}</span>
         </div>
 
+        <div className="seccion-cabeza">
+          <h2 className="h2" style={{ fontSize: 20 }}>Jugadores</h2>
+          <span className="mini suave">Lista interna, no se publica</span>
+        </div>
         <div className="chips">
           <button type="button" className="chip" aria-pressed={!soloPend} onClick={() => setSoloPend(false)}>Todos ({jugadores.length})</button>
           <button type="button" className="chip" aria-pressed={soloPend} onClick={() => setSoloPend(true)}>Autorización incompleta ({pendientes.length})</button>
@@ -149,7 +205,7 @@ export default function PanelPlanteles() {
             <div className="campo"><label htmlFor="nj-pos">Posición</label><input id="nj-pos" className="control" value={nuevo.posicion} onChange={(e) => setNuevo({ ...nuevo, posicion: e.target.value })} /></div>
           </div>
           <label className="check" htmlFor="nj-menor"><input id="nj-menor" type="checkbox" checked={nuevo.esMenor} onChange={(e) => setNuevo({ ...nuevo, esMenor: e.target.checked })} />Es menor de edad</label>
-          <span className="ayuda">No se cargan DNI, fecha de nacimiento ni domicilio. El jugador no aparece en la app hasta tener autorización.</span>
+          <span className="ayuda">No se cargan DNI, fecha de nacimiento ni domicilio. La lista es interna: sirve para saber quién autorizó aparecer en fotos.</span>
           <button type="submit" className="btn btn-primario">Agregar</button>
         </form>
       </main>

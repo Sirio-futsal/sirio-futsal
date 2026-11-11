@@ -35,6 +35,8 @@ export const equiposBase = [
   { id: 'escuelita', categoriaId: 'escuelita', nombre: 'Escuelita', grupo: 'escuelita' },
 ].map((e) => ({
   ...e,
+  entrenador: ['masc-a-primera', 'fem-b-primera'].includes(e.id) ? 'Nombre del entrenador (ejemplo)' : '',
+  fotoUrl: null,
   fotoCargada: ['masc-a-primera', 'fem-b-primera', 'fem-b-sub14'].includes(e.id),
 }))
 
@@ -187,6 +189,42 @@ export const boletinBase = {
   jugadores: ['Ramiro Andalaf', 'Pedro Di Prinzio', 'Sebastián Pinto', 'Pilar Cairo'],
 }
 
+// Tablas de posiciones de ejemplo (nombres ilustrativos). En la versión real se cargan desde el panel.
+function filaTabla(pos, equipo, pj, pg, pe, pp, gf, gc) {
+  return { pos, equipo, pj, pg, pe, pp, gf, gc, dg: gf - gc, pts: pg * 3 + pe }
+}
+export function crearTablas(hoy = new Date()) {
+  const fecha = fechaISO(hoy, -2)
+  const base = (sirioPos) => {
+    const rivales = ['Rival A', 'Rival B', 'Rival C', 'Rival D', 'Rival E', 'Rival F']
+    const filas = []
+    let r = 0
+    for (let pos = 1; pos <= 7; pos += 1) {
+      if (pos === sirioPos) filas.push(filaTabla(pos, 'Argentino Sirio', 10, 8 - pos, 2, pos - 1 > 2 ? 3 : 1, 30 - pos * 2, 14 + pos))
+      else { filas.push(filaTabla(pos, rivales[r], 10, 8 - pos, 1, pos, 28 - pos * 2, 13 + pos)); r += 1 }
+    }
+    return filas
+  }
+  return [
+    { equipoId: 'masc-a-primera', filas: base(3), actualizada: fecha },
+    { equipoId: 'masc-a-reserva', filas: base(2), actualizada: fecha },
+    { equipoId: 'fem-b-primera', filas: base(4), actualizada: fecha },
+    { equipoId: 'masc-b-reserva', filas: base(5), actualizada: fecha },
+  ]
+}
+
+export const clubBase = {
+  historia: 'Texto de ejemplo con la historia del club. La administradora lo escribe desde el panel (Más → Datos del club).',
+  direccion: '[Dirección del club]',
+  telefono: '[Teléfono de ejemplo]',
+  whatsapp: '',
+  instagram: '',
+  indumentariaTexto: '',
+  indumentariaUrl: '',
+  sponsors: 'Sponsor de ejemplo 1\nSponsor de ejemplo 2',
+  archivo: '2025: Masculino A Primera · 3º puesto (ejemplo)\n2024: Femenino B · 2º puesto (ejemplo)',
+}
+
 export function estadoInicial(hoy = new Date()) {
   return {
     equipos: equiposBase,
@@ -198,6 +236,9 @@ export function estadoInicial(hoy = new Date()) {
     inscripciones: inscripcionesBase.map((i) => ({ ...i, fecha: fechaISO(hoy, -1) })),
     avisosEnviados: [],
     boletin: boletinBase,
+    tablas: crearTablas(hoy),
+    club: { ...clubBase },
+    galeria: [],
     sesion: null,
     preferencias: { seguidos: ['masc-a-primera', 'masc-a-reserva'], tipos: ['proximo', 'resultado', 'horario', 'anuncio'] },
   }

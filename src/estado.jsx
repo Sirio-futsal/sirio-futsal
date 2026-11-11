@@ -9,7 +9,16 @@ const CLAVE = 'sirio-futsal-prueba-v1'
 
 function estadoGuardadoOInicial() {
   const g = leerGuardado()
-  return g ? { ...g, boletin: g.boletin || estadoInicial().boletin } : estadoInicial()
+  if (!g) return estadoInicial()
+  const base = estadoInicial()
+  return {
+    ...g,
+    boletin: g.boletin || base.boletin,
+    tablas: g.tablas || base.tablas,
+    club: g.club || base.club,
+    galeria: g.galeria || [],
+    equipos: g.equipos.map((e) => ({ entrenador: '', fotoUrl: null, ...e })),
+  }
 }
 
 // Con la base real, en este navegador solo se guardan las preferencias de avisos.
@@ -36,6 +45,13 @@ function guardar(estado) {
 let contadorId = 0
 const nuevoId = (prefijo) => (NUBE_ACTIVA ? idUnico() : `${prefijo}-${Date.now().toString(36)}-${(contadorId++).toString(36)}`)
 
+// Con la base real la foto del equipo se publica solo si todos sus jugadores autorizaron su imagen.
+function conFotoRecalculada(s, equipoId) {
+  const delEquipo = s.jugadores.filter((j) => j.equipoId === equipoId)
+  const publicable = delEquipo.length > 0 && delEquipo.every(R.puedeAparecerEnFotos)
+  return { ...s, equipos: s.equipos.map((e) => (e.id === equipoId && typeof e.fotoPublicable === 'boolean' ? { ...e, fotoPublicable: !!e.fotoCargada && publicable } : e)) }
+}
+
 function reductor(s, a) {
   switch (a.tipo) {
     case 'cargar':
@@ -53,13 +69,31 @@ function reductor(s, a) {
     }
     case 'noticia/crear':
       return { ...s, noticias: [{ ...a.noticia, id: a.noticia.id || nuevoId('n') }, ...s.noticias] }
-    case 'jugador/agregar':
-      return { ...s, jugadores: [...s.jugadores, { ...a.jugador, id: a.jugador.id || nuevoId('j') }] }
-    case 'jugador/autorizacion':
-      return {
-        ...s,
-        jugadores: s.jugadores.map((j) => (j.id === a.jugadorId ? { ...j, autorizacion: a.autorizacion } : j)),
-      }
+    case 'jugador/agregar': {
+      const nuevo = { ...s, jugadores: [...s.jugadores, { ...a.jugador, id: a.jugador.id || nuevoId('j') }] }
+      return conFotoRecalculada(nuevo, a.jugador.equipoId)
+    }
+    case 'jugador/autorizacion': {
+      const j = s.jugadores.find((x) => x.id === a.jugadorId)
+      const nuevo = { ...s, jugadores: s.jugadores.map((x) => (x.id === a.jugadorId ? { ...x, autorizacion: a.autorizacion } : x)) }
+      return j ? conFotoRecalculada(nuevo, j.equipoId) : nuevo
+    }
+    case 'equipo/entrenador':
+      return { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, entrenador: a.entrenador } : e)) }
+    case 'equipo/foto': {
+      const nuevo = { ...s, equipos: s.equipos.map((e) => (e.id === a.equipoId ? { ...e, fotoUrl: a.url || null, fotoCargada: !!a.url, ...(typeof e.fotoPublicable === 'boolean' ? { fotoPublicable: false } : {}) } : e)) }
+      return conFotoRecalculada(nuevo, a.equipoId)
+    }
+    case 'tabla/guardar': {
+      const otras = (s.tablas || []).filter((t) => t.equipoId !== a.equipoId)
+      return { ...s, tablas: [...otras, { equipoId: a.equipoId, filas: a.filas, actualizada: a.actualizada }] }
+    }
+    case 'club/guardar':
+      return { ...s, club: a.club }
+    case 'galeria/agregar':
+      return { ...s, galeria: [{ ...a.foto, id: a.foto.id || nuevoId('g') }, ...(s.galeria || [])] }
+    case 'galeria/quitar':
+      return { ...s, galeria: (s.galeria || []).filter((f) => f.id !== a.fotoId) }
     case 'entrenador/invitar':
       return {
         ...s,
@@ -122,6 +156,13 @@ function permiso(tipo, datos, usuario, estado) {
       return R.puedeEnviarAvisoGeneral(usuario) || 'Solo la administradora envía avisos generales.'
     case 'boletin/guardar':
       return R.puedeCargarBoletin(usuario) || 'Solo la administradora carga el boletín.'
+    case 'equipo/entrenador':
+    case 'equipo/foto':
+    case 'tabla/guardar':
+    case 'club/guardar':
+    case 'galeria/agregar':
+    case 'galeria/quitar':
+      return R.puedeEditarContenidoClub(usuario) || 'Solo la administradora edita este contenido.'
     case 'restablecer':
       if (NUBE_ACTIVA) return 'Con la base real no se restablecen los datos.'
       return R.esAdmin(usuario) || 'Solo la administradora puede restablecer los datos de prueba.'
@@ -137,6 +178,7 @@ function conIds(tipo, d) {
     case 'noticia/crear': return { ...d, noticia: { ...d.noticia, id: d.noticia.id || nuevoId('n') } }
     case 'jugador/agregar': return { ...d, jugador: { ...d.jugador, id: d.jugador.id || nuevoId('j') } }
     case 'aviso/enviar': return { ...d, aviso: { ...d.aviso, id: d.aviso.id || nuevoId('a') } }
+    case 'galeria/agregar': return { ...d, foto: { ...d.foto, id: d.foto.id || nuevoId('g') } }
     case 'inscripcion/crear': return { ...d, inscripcion: { ...d.inscripcion, id: d.inscripcion.id || nuevoId('i') } }
     case 'entrenador/invitar': return { ...d, id: d.id || `inv-${idUnico()}` }
     default: return d

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   puedeEditarEquipo, equiposEditables, puedePublicarEnCategoria, puedeGestionarAutorizaciones,
   jugadorVisible, nombrePublico, puedeAparecerEnFotos, fotoEquipoPublicable, resultadoSirio, partidoSinResultado,
+  parsearTabla, filaDeSirio, parsearSponsors, enlaceWhatsapp,
 } from './reglas.js'
 import { equiposBase, jugadoresBase, usuariosBase, categorias, crearPartidos } from './ejemplo.js'
 
@@ -106,5 +107,31 @@ describe('fotoEquipoPublicable con la base real', () => {
     expect(fotoEquipoPublicable({ fotoCargada: true, fotoPublicable: true }, [])).toBe(true)
     expect(fotoEquipoPublicable({ fotoCargada: true, fotoPublicable: false }, [])).toBe(false)
     expect(fotoEquipoPublicable({ fotoCargada: false, fotoPublicable: true }, [])).toBe(false)
+  })
+})
+
+describe('tabla de posiciones pegada desde la Rosarina', () => {
+  it('lee filas con posición, con tabuladores o espacios, y calcula DG si falta', () => {
+    const f = parsearTabla("1\tR. Central\t14\t10\t2\t2\t27\t11\t16\t32\n2 Newell's 14 8 1 5 27 14 25\nPos Equipo PJ PG PE PP GF GC DG Puntos")
+    expect(f).toHaveLength(2)
+    expect(f[0]).toMatchObject({ pos: 1, equipo: 'R. Central', pj: 14, dg: 16, pts: 32 })
+    expect(f[1]).toMatchObject({ pos: 2, equipo: "Newell's", gf: 27, gc: 14, dg: 13, pts: 25 })
+  })
+  it('acepta nombres con números y diferencias negativas', () => {
+    expect(parsearTabla('Rival 2 14 1 1 12 5 30 -25 4')[0]).toMatchObject({ equipo: 'Rival 2', dg: -25, pts: 4 })
+  })
+  it('encuentra la fila de Sirio', () => {
+    expect(filaDeSirio(parsearTabla('1 Argentino Sirio 5 3 1 1 9 5 4 10'))?.pts).toBe(10)
+    expect(filaDeSirio(parsearTabla('1 Otro 5 3 1 1 9 5 4 10'))).toBeNull()
+  })
+})
+
+describe('contenido del club', () => {
+  it('sponsors con link opcional', () => {
+    expect(parsearSponsors('Kiosco | https://x.com\nOtro\n\n')).toEqual([{ nombre: 'Kiosco', url: 'https://x.com' }, { nombre: 'Otro', url: '' }])
+  })
+  it('arma el link de WhatsApp con código de país', () => {
+    expect(enlaceWhatsapp('341 555 1234')).toBe('https://wa.me/5493415551234')
+    expect(enlaceWhatsapp('')).toBe('')
   })
 })

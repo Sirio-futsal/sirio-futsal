@@ -7,12 +7,14 @@ import { ListaCategorias, DetalleCategoria } from './pantallas/publicas/Categori
 import { ListaNoticias, DetalleNoticia } from './pantallas/publicas/Noticias.jsx'
 import Mas from './pantallas/publicas/Mas.jsx'
 import Avisos from './pantallas/publicas/Avisos.jsx'
+import GaleriaCompleta from './pantallas/publicas/Galeria.jsx'
 import Ingreso from './pantallas/panel/Ingreso.jsx'
 import PanelInicio from './pantallas/panel/Inicio.jsx'
 import PanelPartidos from './pantallas/panel/Partidos.jsx'
 import PanelNoticias from './pantallas/panel/Noticias.jsx'
 import PanelPlanteles from './pantallas/panel/Planteles.jsx'
 import { PanelBoletin } from './pantallas/panel/Boletin.jsx'
+import { PanelTablas, PanelClub, PanelGaleria } from './pantallas/panel/Contenido.jsx'
 import { PanelMas, PanelEntrenadores, PanelRosarina, PanelInscriptos, PanelAviso } from './pantallas/panel/Mas.jsx'
 
 const PANEL = {
@@ -26,6 +28,9 @@ const PANEL = {
   'panel-inscriptos': PanelInscriptos,
   'panel-aviso': PanelAviso,
   'panel-boletin': PanelBoletin,
+  'panel-tablas': PanelTablas,
+  'panel-club': PanelClub,
+  'panel-galeria': PanelGaleria,
 }
 
 function Pantalla() {
@@ -47,6 +52,7 @@ function Pantalla() {
     case 'noticias': return <ListaNoticias />
     case 'mas': return <Mas />
     case 'avisos': return <Avisos />
+    case 'galeria': return <GaleriaCompleta />
     default: return <Inicio />
   }
 }

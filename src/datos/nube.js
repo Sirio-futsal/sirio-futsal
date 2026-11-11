@@ -2,7 +2,7 @@
 // La clave "publishable" está pensada para ir en la app: lo que cada persona puede
 // ver o cambiar lo decide la seguridad por fila de la base (supabase/esquema.sql).
 import { createClient } from '@supabase/supabase-js'
-import { equiposBase, boletinBase } from './ejemplo.js'
+import { equiposBase, boletinBase, clubBase } from './ejemplo.js'
 
 export const SUPABASE_URL = 'https://vnsqmoyiepgycwgxvbqs.supabase.co'
 export const SUPABASE_CLAVE = 'sb_publishable_ixs_1n9338IiEAGP8vXHUA_KWmhQcMU'
@@ -46,12 +46,29 @@ const aSugerencia = (r) => ({ id: r.id, tipo: r.tipo, partidoId: r.partido_id, g
 const aInscripcion = (r) => ({ id: r.id, fecha: r.fecha, jugador: r.jugador, categoria: r.categoria, adulto: r.adulto, telefono: r.telefono, mensaje: r.mensaje })
 const aAviso = (r) => ({ id: r.id, tipo: r.tipo, equipoId: r.equipo_id, categoriaId: r.categoria_id, titulo: r.titulo, mensaje: r.mensaje, fecha: r.fecha })
 
+const aEquipo = (r) => ({
+  id: r.id, categoriaId: r.categoria_id, nombre: r.nombre, grupo: r.grupo, ...(r.division ? { division: r.division } : {}),
+  entrenador: r.entrenador || '', fotoUrl: r.foto_url || null, fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable,
+})
+const aClub = (r) => ({
+  historia: r.historia || '', direccion: r.direccion || '', telefono: r.telefono || '', whatsapp: r.whatsapp || '',
+  instagram: r.instagram || '', indumentariaTexto: r.indumentaria_texto || '', indumentariaUrl: r.indumentaria_url || '',
+  sponsors: r.sponsors || '', archivo: r.archivo || '',
+})
+const deClub = (c) => ({
+  id: 1, historia: c.historia, direccion: c.direccion, telefono: c.telefono, whatsapp: c.whatsapp, instagram: c.instagram,
+  indumentaria_texto: c.indumentariaTexto, indumentaria_url: c.indumentariaUrl, sponsors: c.sponsors, archivo: c.archivo,
+})
+const aFoto = (r) => ({ id: r.id, titulo: r.titulo || '', categoriaId: r.categoria_id || null, temporada: r.temporada || '', url: r.url })
+
 // Estado mientras todavía no llegó nada de la base (sin datos de ejemplo).
 export function estadoVacio(preferencias) {
   return {
-    equipos: equiposBase.map((e) => ({ ...e, fotoCargada: false })),
+    equipos: equiposBase.map((e) => ({ ...e, entrenador: '', fotoUrl: null, fotoCargada: false })),
     partidos: [], noticias: [], jugadores: [], usuarios: [], sugerencias: [], inscripciones: [], avisosEnviados: [],
     boletin: { ...boletinBase, jugadores: [] },
+    tablas: [], galeria: [],
+    club: Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     sesion: null,
     preferencias,
   }
@@ -60,17 +77,20 @@ export function estadoVacio(preferencias) {
 // Lee todo lo que la persona actual puede ver (la base filtra el resto).
 export async function cargarTodo(preferencias) {
   const c = sb()
-  const [equipos, partidos, noticias, boletin, jugPub, sesionRes] = await Promise.all([
+  const [equiposPub, partidos, noticias, boletin, tablas, club, galeria, sesionRes] = await Promise.all([
     c.from('equipos_publicos').select('*').then(revisar),
     c.from('partidos').select('*').order('fecha').then(revisar),
     c.from('noticias').select('*').order('fecha', { ascending: false }).order('creada', { ascending: false }).then(revisar),
     c.from('boletin').select('*').eq('id', 1).maybeSingle().then(revisar),
-    c.from('jugadores_publicos').select('*').then(revisar),
+    c.from('tablas').select('*').then(revisar),
+    c.from('club').select('*').eq('id', 1).maybeSingle().then(revisar),
+    c.from('galeria').select('*').order('creada', { ascending: false }).then(revisar),
     c.auth.getSession(),
   ])
   const sesion = sesionRes.data?.session?.user?.id || null
 
-  const jugadores = new Map(jugPub.map((r) => [r.id, aJugador(r)]))
+  let equipos = equiposPub.map(aEquipo)
+  const jugadores = new Map()
   let usuarios = []
   let sugerencias = []
   let inscripciones = []
@@ -83,6 +103,10 @@ export async function cargarTodo(preferencias) {
     if (yo) {
       const privados = await c.from('jugadores').select('*').then(revisar)
       privados.forEach((r) => jugadores.set(r.id, aJugador(r)))
+      // El personal ve la foto de sus equipos aunque todavía no se pueda publicar.
+      const propios = await c.from('equipos').select('id, foto_url').then(revisar)
+      const urls = new Map(propios.map((r) => [r.id, r.foto_url]))
+      equipos = equipos.map((e) => (urls.has(e.id) ? { ...e, fotoUrl: urls.get(e.id) || null, fotoCargada: !!urls.get(e.id) } : e))
       avisosEnviados = (await c.from('avisos_enviados').select('*').order('creado', { ascending: false }).limit(30).then(revisar)).map(aAviso)
       if (yo.rol === 'admin') {
         const [inv, sug, ins] = await Promise.all([
@@ -98,14 +122,14 @@ export async function cargarTodo(preferencias) {
   }
 
   return {
-    equipos: equipos.map((r) => ({
-      id: r.id, categoriaId: r.categoria_id, nombre: r.nombre, grupo: r.grupo, ...(r.division ? { division: r.division } : {}),
-      fotoCargada: !!r.foto_cargada, fotoPublicable: !!r.foto_publicable,
-    })),
+    equipos,
     partidos: partidos.map(aPartido),
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
     usuarios, sugerencias, inscripciones, avisosEnviados,
+    tablas: tablas.map((t) => ({ equipoId: t.equipo_id, filas: t.filas || [], actualizada: t.actualizada })),
+    club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
+    galeria: galeria.map(aFoto),
     boletin: boletin ? { numero: boletin.numero, fecha: boletin.fecha, jugadores: boletin.jugadores || [] } : { ...boletinBase, jugadores: [] },
     sesion,
     preferencias,
@@ -116,6 +140,7 @@ export async function cargarTodo(preferencias) {
 export const ACCIONES_NUBE = new Set([
   'partido/guardar', 'noticia/crear', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
+  'equipo/entrenador', 'equipo/foto', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
 ])
 
 const esInvitacion = (id) => String(id).startsWith('inv-')
@@ -175,9 +200,57 @@ export async function escribir(tipo, a, previo) {
       const b = a.boletin
       return revisar(await c.from('boletin').upsert({ id: 1, numero: b.numero, fecha: b.fecha, jugadores: b.jugadores }))
     }
+    case 'equipo/entrenador':
+      return revisar(await c.from('equipos').update({ entrenador: a.entrenador.trim() || null }).eq('id', a.equipoId))
+    case 'equipo/foto':
+      return revisar(await c.from('equipos').update({ foto_url: a.url || null, foto_cargada: !!a.url }).eq('id', a.equipoId))
+    case 'tabla/guardar':
+      return revisar(await c.from('tablas').upsert({ equipo_id: a.equipoId, filas: a.filas, actualizada: a.actualizada }))
+    case 'club/guardar':
+      return revisar(await c.from('club').upsert(deClub(a.club)))
+    case 'galeria/agregar': {
+      const f = a.foto
+      return revisar(await c.from('galeria').insert({ id: f.id, titulo: f.titulo || '', categoria_id: f.categoriaId || null, temporada: f.temporada || '', url: f.url }))
+    }
+    case 'galeria/quitar': {
+      const f = (previo.galeria || []).find((x) => x.id === a.fotoId)
+      revisar(await c.from('galeria').delete().eq('id', a.fotoId))
+      if (f) await borrarImagen(f.url)
+      return null
+    }
     default:
       return null
   }
+}
+
+// ---------- Imágenes (almacén "imagenes" de Supabase) ----------
+async function reducirImagen(archivo, maximo = 1600) {
+  const bmp = await createImageBitmap(archivo)
+  const escala = Math.min(1, maximo / Math.max(bmp.width, bmp.height))
+  const lienzo = document.createElement('canvas')
+  lienzo.width = Math.round(bmp.width * escala)
+  lienzo.height = Math.round(bmp.height * escala)
+  lienzo.getContext('2d').drawImage(bmp, 0, 0, lienzo.width, lienzo.height)
+  const blob = await new Promise((ok) => lienzo.toBlob(ok, 'image/jpeg', 0.82))
+  if (!blob) throw new Error('No se pudo procesar la imagen.')
+  return blob
+}
+
+// Sube una foto (la achica antes) y devuelve su dirección pública.
+export async function subirImagen(archivo, carpeta) {
+  if (!NUBE_ACTIVA) throw new Error('Subir fotos funciona con la base real, no en la versión de prueba.')
+  if (!archivo || !/^image\//.test(archivo.type)) throw new Error('Elegí un archivo de imagen (JPG o PNG).')
+  const blob = await reducirImagen(archivo)
+  const ruta = `${carpeta}/${idUnico()}.jpg`
+  const { error } = await sb().storage.from('imagenes').upload(ruta, blob, { contentType: 'image/jpeg', cacheControl: '31536000' })
+  if (error) throw error
+  return sb().storage.from('imagenes').getPublicUrl(ruta).data.publicUrl
+}
+
+export async function borrarImagen(url) {
+  const ruta = String(url || '').split('/imagenes/')[1]
+  if (!ruta) return
+  try { await sb().storage.from('imagenes').remove([decodeURIComponent(ruta)]) } catch { /* si no se pudo borrar el archivo, no pasa nada grave */ }
 }
 
 // ---------- Ingreso ----------

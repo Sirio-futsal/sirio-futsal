@@ -1,5 +1,5 @@
 import { useApp } from '../estado.jsx'
-import { resultadoSirio } from '../datos/reglas.js'
+import { resultadoSirio, filaDeSirio } from '../datos/reglas.js'
 import { NUBE_ACTIVA } from '../datos/nube.js'
 
 export const ESCUDO = 'escudo.png'
@@ -188,4 +188,36 @@ export function ordenarPartidos(lista, asc = true) {
     const k2 = `${b.fecha} ${b.hora || '99:99'}`
     return asc ? k1.localeCompare(k2) : k2.localeCompare(k1)
   })
+}
+
+export function TablaPosiciones({ filas }) {
+  return (
+    <div className="tabla-scroll">
+      <table className="tabla-pos">
+        <thead>
+          <tr>
+            <th scope="col">#</th><th scope="col" className="eq">Equipo</th><th scope="col">Pts</th>
+            {['PJ', 'PG', 'PE', 'PP', 'GF', 'GC', 'DG'].map((c) => <th key={c} scope="col">{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((f) => (
+            <tr key={`${f.pos}-${f.equipo}`} className={/sirio/i.test(f.equipo) ? 'sirio' : undefined}>
+              <td className="num">{f.pos}</td>
+              <td className="eq">{f.equipo}</td>
+              <td className="num pts">{f.pts}</td>
+              <td className="num">{f.pj}</td><td className="num">{f.pg}</td><td className="num">{f.pe}</td><td className="num">{f.pp}</td>
+              <td className="num">{f.gf}</td><td className="num">{f.gc}</td><td className="num">{f.dg > 0 ? `+${f.dg}` : f.dg}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// Texto de la posición de Sirio en una tabla, p. ej. "3º · 23 pts".
+export function posicionSirioTexto(filas) {
+  const f = filaDeSirio(filas)
+  return f ? `${f.pos}º · ${f.pts} pts` : null
 }

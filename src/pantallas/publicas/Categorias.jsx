@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../estado.jsx'
-import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, TarjetaPartido, ordenarPartidos } from '../../componentes/comunes.jsx'
-import { jugadorVisible, nombrePublico, fotoEquipoPublicable } from '../../datos/reglas.js'
+import { EncabezadoPublico, EncabezadoVolver, NavPublica, Chips, TarjetaPartido, TablaPosiciones, ordenarPartidos, nombreEquipo, fechaCorta } from '../../componentes/comunes.jsx'
+import { fotoEquipoPublicable } from '../../datos/reglas.js'
 
 export function ListaCategorias() {
   const { estado, ir, categorias } = useApp()
@@ -38,15 +38,16 @@ export function DetalleCategoria({ id }) {
   const cat = categoriaPorId[id]
   const equipos = estado.equipos.filter((e) => e.categoriaId === id)
   const [equipoId, setEquipoId] = useState(equipos[0]?.id)
-  const [pestana, setPestana] = useState('plantel')
+  const [pestana, setPestana] = useState('equipo')
   if (!cat) return null
   const equipo = equipos.find((e) => e.id === equipoId) || equipos[0]
   const delEquipo = estado.jugadores.filter((j) => j.equipoId === equipo.id)
-  const visibles = delEquipo.filter(jugadorVisible).sort((a, b) => a.dorsal - b.dorsal)
   const foto = fotoEquipoPublicable(equipo, delEquipo)
+  const tabla = (estado.tablas || []).find((t) => t.equipoId === equipo.id)
   const partidos = ordenarPartidos(estado.partidos.filter((p) => p.equipoId === equipo.id))
   const proximos = partidos.filter((p) => p.estado !== 'jugado' && p.fecha >= hoyISO)
   const jugados = partidos.filter((p) => p.estado === 'jugado').reverse()
+  const pestanaActiva = !cat.conFixture ? 'equipo' : pestana
 
   return (
     <>
@@ -58,40 +59,49 @@ export function DetalleCategoria({ id }) {
         ) : null}
         {cat.conFixture ? (
           <div className="pestanas" role="tablist">
-            <button type="button" role="tab" aria-selected={pestana === 'plantel'} onClick={() => setPestana('plantel')}>Plantel</button>
+            <button type="button" role="tab" aria-selected={pestana === 'equipo'} onClick={() => setPestana('equipo')}>Equipo</button>
+            <button type="button" role="tab" aria-selected={pestana === 'tabla'} onClick={() => setPestana('tabla')}>Posiciones</button>
             <button type="button" role="tab" aria-selected={pestana === 'partidos'} onClick={() => setPestana('partidos')}>Partidos</button>
           </div>
         ) : null}
 
-        {pestana === 'plantel' || !cat.conFixture ? (
+        {pestanaActiva === 'equipo' ? (
           <>
             <figure className="tarjeta foto-equipo">
-              <div className="rayado">
-                {foto ? 'Foto del equipo (ejemplo)' : equipo.fotoCargada ? 'La foto del equipo se publica cuando todos tengan autorización de imagen.' : 'Foto del equipo pendiente de carga.'}
-              </div>
+              {foto && equipo.fotoUrl ? (
+                <img src={equipo.fotoUrl} alt={`Foto del equipo ${nombreEquipo(equipo, categoriaPorId)}`} />
+              ) : (
+                <div className="rayado">
+                  {foto ? 'Foto del equipo (ejemplo)' : equipo.fotoCargada ? 'La foto del equipo se publica cuando todos tengan autorización de imagen.' : 'Foto del equipo pendiente de carga.'}
+                </div>
+              )}
               <figcaption>{cat.nombre}{equipos.length > 1 ? ` · ${equipo.nombre}` : ''} · Temporada {hoyISO.slice(0, 4)}</figcaption>
             </figure>
-            <section className="seccion">
-              <div className="seccion-cabeza">
-                <h2 className="h2">Plantel</h2>
-                <span className="mini suave">Solo con autorización</span>
-              </div>
-              {visibles.length === 0 ? (
-                <div className="tarjeta vacio">El plantel de este equipo todavía no está cargado.</div>
-              ) : (
-                <ul className="lista">
-                  {visibles.map((j) => (
-                    <li key={j.id} className="fila">
-                      <span className="dorsal num">{j.dorsal}</span>
-                      <span className="crece" style={{ fontWeight: 600 }}>{nombrePublico(j)}</span>
-                      <span className="chico suave">{j.posicion}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            <div className="tarjeta fila">
+              <span className="crece">
+                <span className="mini suave">Entrenador</span>
+                <span style={{ fontWeight: 600 }}>{equipo.entrenador || 'A confirmar'}</span>
+              </span>
+            </div>
           </>
-        ) : (
+        ) : null}
+
+        {pestanaActiva === 'tabla' ? (
+          <section className="seccion">
+            <div className="seccion-cabeza">
+              <h2 className="h2">Posiciones</h2>
+              {tabla ? <span className="mini suave">Actualizada el {fechaCorta(tabla.actualizada)}</span> : null}
+            </div>
+            {tabla && tabla.filas.length ? (
+              <>
+                <TablaPosiciones filas={tabla.filas} />
+                <span className="mini suave">Fuente: Asociación Rosarina de Fútbol.</span>
+              </>
+            ) : <div className="tarjeta vacio">La tabla de posiciones de este equipo todavía no está cargada.</div>}
+          </section>
+        ) : null}
+
+        {pestanaActiva === 'partidos' ? (
           <>
             <section className="seccion">
               <h2 className="h2">Próximos</h2>
@@ -102,7 +112,7 @@ export function DetalleCategoria({ id }) {
               {jugados.length ? jugados.map((p) => <TarjetaPartido key={p.id} partido={p} mostrarFecha />) : <div className="tarjeta vacio">Sin resultados cargados.</div>}
             </section>
           </>
-        )}
+        ) : null}
       </main>
       <NavPublica actual="categorias" />
     </>

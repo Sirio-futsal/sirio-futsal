@@ -90,3 +90,69 @@ export function parsearJugadoresBoletin(texto) {
       return true
     })
 }
+
+// ---------- Contenido del club (solo la administradora) ----------
+
+export const puedeEditarContenidoClub = esAdmin
+
+// ---------- Tablas de posiciones ----------
+
+// Convierte la tabla copiada de rosariofutbol.com en filas.
+// Acepta: [pos] Equipo PJ PG PE PP GF GC DG Puntos  (DG puede faltar; se calcula).
+// Las columnas pueden venir separadas por tabulaciones o espacios.
+export function parsearTabla(texto) {
+  const esNum = (t) => /^[+-]?\d+$/.test(t)
+  const filas = []
+  for (const linea of String(texto || '').split(/\r?\n/)) {
+    const partes = linea.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+    // Las últimas 8 columnas son PJ PG PE PP GF GC DG Puntos; si falta DG, las últimas 7.
+    let n = 0
+    if (partes.length >= 9 && partes.slice(-8).every(esNum)) n = 8
+    else if (partes.length >= 8 && partes.slice(-7).every(esNum)) n = 7
+    if (!n) continue
+    const nums = partes.slice(-n).map(Number)
+    let nombre = partes.slice(0, -n)
+    let pos = null
+    if (nombre.length > 1 && /^\d+$/.test(nombre[0])) {
+      pos = Number(nombre[0])
+      nombre = nombre.slice(1)
+    }
+    const equipo = nombre.join(' ').trim()
+    if (!equipo) continue
+    const [pj, pg, pe, pp, gf, gc] = nums
+    const dg = n === 8 ? nums[6] : gf - gc
+    filas.push({ pos, equipo, pj, pg, pe, pp, gf, gc, dg, pts: nums[n - 1] })
+  }
+  return filas.map((f, k) => ({ ...f, pos: f.pos ?? k + 1 }))
+}
+
+// Fila de Sirio dentro de una tabla (el nombre del equipo contiene "sirio").
+export function filaDeSirio(filas) {
+  return (filas || []).find((f) => /sirio/i.test(f.equipo)) || null
+}
+
+// "Nombre | https://link" por línea (el link es opcional).
+export function parsearSponsors(texto) {
+  return String(texto || '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => {
+      const [nombre, url] = l.split('|').map((x) => x.trim())
+      return { nombre, url: /^https?:\/\//i.test(url || '') ? url : '' }
+    })
+    .filter((s) => s.nombre)
+}
+
+// Una línea por renglón, sin vacías.
+export function parsearLineas(texto) {
+  return String(texto || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+}
+
+// Enlace de WhatsApp: se escribe el número con código de área, sin 0 ni 15 (ej. 341 555 1234).
+export function enlaceWhatsapp(numero) {
+  let d = String(numero || '').replace(/\D/g, '').replace(/^0+/, '')
+  if (d.length < 8) return ''
+  if (!d.startsWith('54')) d = `549${d}`
+  return `https://wa.me/${d}`
+}
