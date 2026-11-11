@@ -69,6 +69,10 @@ function reductor(s, a) {
     }
     case 'noticia/crear':
       return { ...s, noticias: [{ ...a.noticia, id: a.noticia.id || nuevoId('n') }, ...s.noticias] }
+    case 'noticia/editar':
+      return { ...s, noticias: s.noticias.map((n) => (n.id === a.noticia.id ? { ...n, ...a.noticia } : n)) }
+    case 'noticia/eliminar':
+      return { ...s, noticias: s.noticias.filter((n) => n.id !== a.id) }
     case 'jugador/agregar': {
       const nuevo = { ...s, jugadores: [...s.jugadores, { ...a.jugador, id: a.jugador.id || nuevoId('j') }] }
       return conFotoRecalculada(nuevo, a.jugador.equipoId)
@@ -145,6 +149,12 @@ function permiso(tipo, datos, usuario, estado) {
     }
     case 'noticia/crear':
       return R.puedePublicarEnCategoria(usuario, datos.noticia.categoriaId, estado.equipos) || 'Tu usuario no puede publicar en esa categoría.'
+    case 'noticia/editar':
+      return R.puedePublicarEnCategoria(usuario, datos.noticia.categoriaId, estado.equipos) || 'Tu usuario no puede editar noticias de esa categoría.'
+    case 'noticia/eliminar': {
+      const n = estado.noticias.find((x) => x.id === datos.id)
+      return (n && R.puedePublicarEnCategoria(usuario, n.categoriaId, estado.equipos)) || 'Tu usuario no puede eliminar esa noticia.'
+    }
     case 'jugador/agregar':
       return R.puedeEditarEquipo(usuario, datos.jugador.equipoId) || 'Tu usuario no puede editar el plantel de ese equipo.'
     case 'jugador/autorizacion':

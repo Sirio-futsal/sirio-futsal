@@ -138,7 +138,7 @@ export async function cargarTodo(preferencias) {
 
 // Acciones que se guardan en la base. `previo` es el estado antes de aplicar la acción.
 export const ACCIONES_NUBE = new Set([
-  'partido/guardar', 'noticia/crear', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
+  'partido/guardar', 'noticia/crear', 'noticia/editar', 'noticia/eliminar', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
   'equipo/entrenador', 'equipo/foto', 'equipo/fotos', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
 ])
@@ -155,6 +155,12 @@ export async function escribir(tipo, a, previo) {
       const n = a.noticia
       return revisar(await c.from('noticias').insert({ id: n.id, categoria_id: n.categoriaId ?? null, fecha: n.fecha, destacada: !!n.destacada, titulo: n.titulo, bajada: n.bajada || '', texto: n.texto || '', foto_url: n.fotoUrl || null }))
     }
+    case 'noticia/editar': {
+      const n = a.noticia
+      return revisar(await c.from('noticias').update({ categoria_id: n.categoriaId ?? null, titulo: n.titulo, bajada: n.bajada || '', texto: n.texto || '', foto_url: n.fotoUrl || null }).eq('id', n.id))
+    }
+    case 'noticia/eliminar':
+      return revisar(await c.from('noticias').delete().eq('id', a.id))
     case 'jugador/agregar': {
       const j = a.jugador
       return revisar(await c.from('jugadores').insert({

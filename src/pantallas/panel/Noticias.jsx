@@ -13,6 +13,8 @@ export default function PanelNoticias() {
   ]
   const [f, setF] = useState({ categoria: opciones[0]?.valor || '', titulo: '', bajada: '', texto: '', fotoUrl: '' })
   const [subiendo, setSubiendo] = useState(false)
+  const [editando, setEditando] = useState(null)
+  const [borrar, setBorrar] = useState(null)
   const c = (k) => (e) => setF({ ...f, [k]: e.target.value })
 
   const elegirFoto = async (e) => {
@@ -29,10 +31,31 @@ export default function PanelNoticias() {
     setSubiendo(false)
   }
 
+  const cancelar = () => { setEditando(null); setF({ categoria: opciones[0]?.valor || '', titulo: '', bajada: '', texto: '', fotoUrl: '' }) }
+  const editar = (n) => {
+    setEditando(n.id)
+    setF({ categoria: n.categoriaId || 'club', titulo: n.titulo || '', bajada: n.bajada || '', texto: n.texto || '', fotoUrl: n.fotoUrl || '' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  const eliminar = (n) => {
+    if (ejecutar('noticia/eliminar', { id: n.id })) {
+      mostrarToast('Noticia eliminada.')
+      setBorrar(null)
+      if (editando === n.id) cancelar()
+    }
+  }
+
   const publicar = (e) => {
     e.preventDefault()
     if (!f.titulo.trim()) {
       mostrarToast('Escribí un título.', 'error')
+      return
+    }
+    if (editando) {
+      if (ejecutar('noticia/editar', { noticia: { id: editando, categoriaId: f.categoria === 'club' ? null : f.categoria, titulo: f.titulo.trim(), bajada: f.bajada.trim(), texto: f.texto.trim(), fotoUrl: f.fotoUrl || null } })) {
+        mostrarToast('Noticia actualizada.')
+        cancelar()
+      }
       return
     }
     const ok = ejecutar('noticia/crear', {
@@ -48,7 +71,7 @@ export default function PanelNoticias() {
     <>
       <EncabezadoPanel />
       <main className="contenido g">
-        <h1 className="h1">Nueva noticia</h1>
+        <h1 className="h1">{editando ? 'Editar noticia' : 'Nueva noticia'}</h1>
         <form className="tarjeta form" style={{ padding: 14 }} onSubmit={publicar}>
           <div className="campo">
             <label htmlFor="not-cat">Categoría</label>
@@ -69,18 +92,30 @@ export default function PanelNoticias() {
             </label>
             {f.fotoUrl ? <button type="button" className="btn btn-peligro" onClick={() => setF({ ...f, fotoUrl: '' })}>Quitar foto</button> : null}
           </div>
-          <button type="submit" className="btn btn-primario" disabled={subiendo}>Publicar</button>
+          <button type="submit" className="btn btn-primario" disabled={subiendo}>{editando ? 'Guardar cambios' : 'Publicar'}</button>
+          {editando ? <button type="button" className="btn btn-secundario" onClick={cancelar}>Cancelar</button> : null}
         </form>
 
         <section className="seccion">
           <h2 className="rotulo">Publicadas</h2>
           <div className="lista">
-            {estado.noticias.slice(0, 6).map((n) => (
-              <div key={n.id} className="fila">
+            {estado.noticias.filter((n) => puedePublicarEnCategoria(usuario, n.categoriaId, estado.equipos)).map((n) => (
+              <div key={n.id} className="fila" style={{ flexWrap: 'wrap' }}>
                 <span className="crece">
                   <span style={{ fontWeight: 600 }}>{n.titulo}</span>
                   <span className="mini suave">{n.categoriaId ? categoriaPorId[n.categoriaId].nombre : 'Todo el club'} · {fechaCorta(n.fecha)}</span>
                 </span>
+                {borrar === n.id ? (
+                  <span style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" className="btn btn-peligro" onClick={() => eliminar(n)}>Sí, eliminar</button>
+                    <button type="button" className="btn btn-secundario" onClick={() => setBorrar(null)}>No</button>
+                  </span>
+                ) : (
+                  <span style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" className="btn btn-secundario" onClick={() => editar(n)}>Editar</button>
+                    <button type="button" className="btn btn-peligro" onClick={() => setBorrar(n.id)}>Eliminar</button>
+                  </span>
+                )}
               </div>
             ))}
           </div>
