@@ -1,6 +1,7 @@
 /* SIRIO FUTSAL — app de una columna, pensada para celular; en pantallas grandes se centra a 480px.
    Barra negra con el escudo, verde del club como color de acción, Barlow Condensed para títulos. */
 :root {
+  --dorado: #f8d000;
   --barra: #0d0f0e;
   --barra-texto: #ffffff;
   --barra-suave: #c9d1cc;

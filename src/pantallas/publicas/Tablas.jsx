@@ -21,7 +21,7 @@ export default function Tablas() {
             <nav className="chips" aria-label="Elegí el equipo">
               {items.map(({ t, equipo }) => (
                 <button key={t.equipoId} type="button" className="chip" aria-pressed={actual.t.equipoId === t.equipoId}
-                  style={actual.t.equipoId === t.equipoId ? { background: 'var(--rojo, #c8102e)', color: '#fff' } : undefined}
+                  style={actual.t.equipoId === t.equipoId ? { background: 'var(--dorado)', color: '#0d0f0e' } : undefined}
                   onClick={() => setSel(t.equipoId)}>
                   {nombreEquipo(equipo, categoriaPorId)}
                 </button>
