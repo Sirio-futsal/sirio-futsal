@@ -134,8 +134,14 @@ export async function cargarTodo(preferencias) {
 
   // Cada año empieza limpio: solo se muestran partidos, tablas y playoffs de la temporada en curso (lo anterior queda guardado).
   const anio = new Date().getFullYear()
+  const RE_ANIO = new RegExp('^[A-Z-]{1,2}([0-9]{2})')
+  const anioDePartido = (r) => {
+    if (r.fecha) return Number(String(r.fecha).slice(0, 4))
+    const m = RE_ANIO.exec(String(r.arf_clave || ''))
+    return m ? 2000 + Number(m[1]) : anio
+  }
   const progs = (programacion || []).map(aProg).filter((f) => !f.fecha || Number(f.fecha.slice(0, 4)) === anio)
-  const partidosReales = completarPartidos(partidos.filter((r) => !r.fecha || Number(String(r.fecha).slice(0, 4)) === anio).map(aPartido), progs)
+  const partidosReales = completarPartidos(partidos.filter((r) => anioDePartido(r) === anio).map(aPartido), progs)
   return {
     equipos,
     programacion: progs,
