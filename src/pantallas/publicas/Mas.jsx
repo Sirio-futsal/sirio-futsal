@@ -22,7 +22,7 @@ export default function Mas() {
     <>
       <EncabezadoPublico />
       <main className="contenido g">
-        <section className="hero" style={{ background: 'var(--accion)', color: 'var(--accion-texto)' }}>
+        <section className="hero" style={{ background: 'var(--relleno)', color: 'var(--relleno-texto)', boxShadow: 'inset 0 0 0 1.5px var(--relleno-borde)' }}>
           <h2 className="h2" style={{ fontSize: 26 }}>¿Querés jugar en Sirio?</h2>
           <p style={{ margin: 0, fontSize: 14 }}>Dejanos tus datos y te contactamos con la categoría que corresponda.</p>
         </section>

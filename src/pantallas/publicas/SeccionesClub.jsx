@@ -192,7 +192,7 @@ export function Sumate() {
   }
   const campo = { display: 'block', width: '100%', minWidth: 0, maxWidth: '100%', height: 48, padding: '10px 12px', borderRadius: 10, border: 0, fontSize: 16, boxSizing: 'border-box', background: '#ffffff', color: '#0d0f0e', WebkitAppearance: 'none', appearance: 'none', textAlign: 'left', fontFamily: 'inherit' }
   return (
-    <section id="sumate" className="hero ancla" style={{ background: 'var(--accion)', color: 'var(--accion-texto)' }} aria-labelledby="t-sumate">
+    <section id="sumate" className="hero ancla" style={{ background: 'var(--relleno)', color: 'var(--relleno-texto)', boxShadow: 'inset 0 0 0 1.5px var(--relleno-borde)' }} aria-labelledby="t-sumate">
       <h2 id="t-sumate" className="h2" style={{ fontSize: 26 }}>¿Querés jugar en Sirio?</h2>
       <p style={{ margin: 0, fontSize: 14 }}>Completá tus datos y le llegan directo a la secretaría por WhatsApp.</p>
       <form className="form-sumate" onSubmit={enviar} style={{ display: 'grid', gap: 8 }}>
