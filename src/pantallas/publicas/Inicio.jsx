@@ -1,6 +1,6 @@
 import { useApp } from '../../estado.jsx'
 import { EncabezadoPublico, NavPublica, ESCUDO, TarjetaPartido, fechaCorta, nombreEquipo, iniciales, ordenarPartidos } from '../../componentes/comunes.jsx'
-import { resultadoSirio } from '../../datos/reglas.js'
+import { resultadoSirio, estiloFoto } from '../../datos/reglas.js'
 import Carrusel from './Carrusel.jsx'
 import { MenuSecciones, seccionesDisponibles, Posiciones, Galeria, Archivo, Historia, Sponsors, Indumentaria, Sumate, Contacto } from './SeccionesClub.jsx'
 
@@ -70,7 +70,7 @@ export default function Inicio() {
             </div>
             <button type="button" className="tarjeta fila-btn" style={{ display: 'flex', overflow: 'hidden', padding: 0 }} onClick={() => ir(`noticia-${noticia.id}`)}>
               {fotoNovedad ? (
-                <img src={fotoNovedad} alt="" loading="lazy" style={{ width: 104, flexShrink: 0, objectFit: 'cover', objectPosition: (noticia && noticia.fotoUrl && noticia.fotoPos) || 'center' }} />
+                <img src={fotoNovedad} alt="" loading="lazy" style={{ width: 104, flexShrink: 0, ...estiloFoto(noticia && noticia.fotoUrl ? noticia.fotoPos : '') }} />
               ) : <div className="rayado" style={{ width: 104, flexShrink: 0, fontSize: 11 }}>Foto</div>}
               <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                 <span className="rotulo-verde">{noticia.categoriaId ? categoriaPorId[noticia.categoriaId].nombre : 'Todo el club'}</span>

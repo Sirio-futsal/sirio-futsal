@@ -3,27 +3,37 @@ import { useApp } from '../../estado.jsx'
 import { EncabezadoPanel, NavPanel } from './Comun.jsx'
 import { fechaCorta } from '../../componentes/comunes.jsx'
 import { subirImagen } from '../../datos/nube.js'
-import { esAdmin, puedePublicarEnCategoria } from '../../datos/reglas.js'
+import { estiloFoto, esAdmin, puedePublicarEnCategoria } from '../../datos/reglas.js'
 
 // Recuadro para acomodar la foto: se arrastra con el dedo o el mouse para elegir qué parte se ve.
 function Encuadre({ url, pos, onCambio }) {
   const [ini, setIni] = useState(null)
-  const [x, y] = (pos || '50% 50%').split(' ').map((v) => parseFloat(v) || 50)
-  const bajar = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); setIni({ cx: e.clientX, cy: e.clientY, x, y }) }
+  const [x, y, z] = (pos || '50% 50% 1').split(' ').map((v) => parseFloat(v))
+  const px = Number.isFinite(x) ? x : 50
+  const py = Number.isFinite(y) ? y : 50
+  const zoom = Number.isFinite(z) && z >= 1 ? z : 1
+  const emitir = (nx, ny, nz) => onCambio(`${Math.round(nx)}% ${Math.round(ny)}% ${nz.toFixed(2)}`)
+  const bajar = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); setIni({ cx: e.clientX, cy: e.clientY, x: px, y: py }) }
   const mover = (e) => {
     if (!ini) return
     const r = e.currentTarget.getBoundingClientRect()
-    const nx = Math.min(100, Math.max(0, ini.x - ((e.clientX - ini.cx) / r.width) * 160))
-    const ny = Math.min(100, Math.max(0, ini.y - ((e.clientY - ini.cy) / r.height) * 160))
-    onCambio(`${Math.round(nx)}% ${Math.round(ny)}%`)
+    const k = 140
+    const nx = Math.min(100, Math.max(0, ini.x - ((e.clientX - ini.cx) / r.width) * k))
+    const ny = Math.min(100, Math.max(0, ini.y - ((e.clientY - ini.cy) / r.height) * k))
+    emitir(nx, ny, zoom)
   }
   return (
-    <div>
+    <div style={{ display: 'grid', gap: 8 }}>
       <div onPointerDown={bajar} onPointerMove={mover} onPointerUp={() => setIni(null)} onPointerCancel={() => setIni(null)}
         style={{ width: '100%', aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 10, touchAction: 'none', cursor: ini ? 'grabbing' : 'grab', position: 'relative', background: '#0d0f0e' }}>
-        <img src={url} alt="Foto de la noticia" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${x}% ${y}%`, pointerEvents: 'none', userSelect: 'none' }} />
-        <span style={{ position: 'absolute', left: 8, bottom: 8, background: 'rgba(0,0,0,.65)', color: '#fff', fontSize: 12, padding: '3px 8px', borderRadius: 999 }}>Arrastrá para acomodar</span>
+        <img src={url} alt="Foto de la noticia" draggable={false} style={{ width: '100%', height: '100%', ...estiloFoto(`${px}% ${py}% ${zoom}`), pointerEvents: 'none', userSelect: 'none' }} />
+        <span style={{ position: 'absolute', left: 8, bottom: 8, background: 'rgba(0,0,0,.65)', color: '#fff', fontSize: 12, padding: '3px 8px', borderRadius: 999 }}>Arrastrá en cualquier dirección</span>
       </div>
+      <label style={{ display: 'grid', gap: 4, fontSize: 14, fontWeight: 600 }}>
+        Tamaño de la foto
+        <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => emitir(px, py, parseFloat(e.target.value))} aria-label="Agrandar o achicar la foto" />
+        <span className="mini suave" style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 400 }}><span>Achicar</span><span>Agrandar</span></span>
+      </label>
     </div>
   )
 }

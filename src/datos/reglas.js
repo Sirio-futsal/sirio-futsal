@@ -165,3 +165,12 @@ export function fotoDelDia(equipo, hoyISO) {
   const desfase = [...String(equipo.id)].reduce((n, ch) => n + ch.charCodeAt(0), 0)
   return pool[(dias + desfase) % pool.length]
 }
+
+// Encuadre de una foto de noticia: "x% y% zoom" (ej. "50% 30% 1.4"). Devuelve el estilo para <img> con object-fit: cover.
+export function estiloFoto(pos) {
+  const [x, y, z] = String(pos || '').split(' ').map((v) => parseFloat(v))
+  const px = Number.isFinite(x) ? x : 50
+  const py = Number.isFinite(y) ? y : 50
+  const zoom = Number.isFinite(z) && z >= 1 ? z : 1
+  return { objectFit: 'cover', objectPosition: `${px}% ${py}%`, transformOrigin: `${px}% ${py}%`, ...(zoom > 1 ? { transform: `scale(${zoom})` } : {}) }
+}
