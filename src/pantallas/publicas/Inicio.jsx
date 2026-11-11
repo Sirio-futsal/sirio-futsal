@@ -9,6 +9,10 @@ export default function Inicio() {
   const proximo = proximos[0]
   const resultados = ordenarPartidos(estado.partidos.filter((p) => resultadoSirio(p)), false).slice(0, 3)
   const noticia = estado.noticias[0]
+  // Foto de Novedades: sale de la Galería del club. Con una sola foto queda fija; con varias rota cada 24 hs.
+  const fotosGaleria = (estado.galeria || []).map((f) => f.url).filter(Boolean).slice().reverse()
+  const diaNum = Math.floor(Date.parse(`${hoyISO}T00:00:00Z`) / 86400000)
+  const fotoNovedad = fotosGaleria.length ? fotosGaleria[diaNum % fotosGaleria.length] : null
   const secciones = seccionesDisponibles(estado)
 
   return (
@@ -91,7 +95,9 @@ export default function Inicio() {
               <button type="button" className="link-btn" onClick={() => ir('noticias')}>Ver todas</button>
             </div>
             <button type="button" className="tarjeta fila-btn" style={{ display: 'flex', overflow: 'hidden', padding: 0 }} onClick={() => ir(`noticia-${noticia.id}`)}>
-              <div className="rayado" style={{ width: 104, flexShrink: 0, fontSize: 11 }}>Foto</div>
+              {fotoNovedad ? (
+                <img src={fotoNovedad} alt="" loading="lazy" style={{ width: 104, flexShrink: 0, objectFit: 'cover' }} />
+              ) : <div className="rayado" style={{ width: 104, flexShrink: 0, fontSize: 11 }}>Foto</div>}
               <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                 <span className="rotulo-verde">{noticia.categoriaId ? categoriaPorId[noticia.categoriaId].nombre : 'Todo el club'}</span>
                 <span style={{ fontWeight: 600, lineHeight: 1.3 }}>{noticia.titulo}</span>
