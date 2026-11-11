@@ -9,6 +9,7 @@ export default function Carrusel() {
   const { estado, ir, hoyISO, equipoPorId, categoriaPorId } = useApp()
   const [i, setI] = useState(0)
   const [pausa, setPausa] = useState(false)
+  const [x0, setX0] = useState(null)
 
   const proximo = ordenarPartidos(estado.partidos.filter((p) => p.estado === 'programado' && p.fecha >= hoyISO))[0]
   const ultimo = ordenarPartidos(estado.partidos.filter((p) => resultadoSirio(p)), false)[0]
@@ -106,14 +107,22 @@ export default function Carrusel() {
     if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
     const t = setInterval(() => setI((x) => (x + 1) % n), 6000)
     return () => clearInterval(t)
-  }, [n, pausa])
+  }, [n, pausa, i])
 
   if (!n) return <section className="tarjeta vacio">No hay partidos programados.</section>
   const actual = i % n
   return (
     <section className="hero carrusel" aria-label="Destacados del club" aria-roledescription="carrusel"
-      onPointerDown={() => setPausa(true)} onPointerUp={() => setPausa(false)} onMouseEnter={() => setPausa(true)} onMouseLeave={() => setPausa(false)}>
+      onPointerDown={(e) => { setPausa(true); setX0(e.clientX) }}
+      onPointerUp={(e) => { setPausa(false); if (x0 !== null && Math.abs(e.clientX - x0) > 40) setI((x) => (x + (e.clientX < x0 ? 1 : n - 1)) % n); setX0(null) }}
+      onPointerCancel={() => { setPausa(false); setX0(null) }} style={{ touchAction: 'pan-y' }} onMouseEnter={() => setPausa(true)} onMouseLeave={() => setPausa(false)}>
       <div key={actual} className="carrusel-slide">{slides[actual]}</div>
+      {n > 1 ? (
+        <>
+          <button type="button" className="carrusel-flecha izq" aria-label="Anterior" onClick={() => setI((x) => (x + n - 1) % n)}>‹</button>
+          <button type="button" className="carrusel-flecha der" aria-label="Siguiente" onClick={() => setI((x) => (x + 1) % n)}>›</button>
+        </>
+      ) : null}
       {n > 1 ? (
         <div className="carrusel-puntos" role="tablist" aria-label="Elegir destacado">
           {slides.map((_, k) => (

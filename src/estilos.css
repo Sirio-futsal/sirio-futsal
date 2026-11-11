@@ -240,3 +240,9 @@ textarea.control { padding: 10px 12px; min-height: 96px; resize: vertical; }
 .carrusel-puntos button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: #5b625e; cursor: pointer; }
 .carrusel-puntos button.on { width: 22px; background: var(--dorado); }
 @media (prefers-reduced-motion: reduce) { .carrusel-slide { animation: none; } }
+
+.carrusel { position: relative; user-select: none; }
+.carrusel-flecha { position: absolute; top: 8px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; z-index: 1; }
+.carrusel-flecha.izq { right: 52px; }
+.carrusel-flecha.der { right: 12px; }
+.carrusel-slide .seccion-cabeza:first-child { padding-right: 96px; }
