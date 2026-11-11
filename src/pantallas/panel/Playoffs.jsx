@@ -3,6 +3,7 @@ import { useApp } from '../../estado.jsx'
 import { EncabezadoPanel, NavPanel, SoloAdmin } from './Comun.jsx'
 import { fechaCorta } from '../../componentes/comunes.jsx'
 import { leerPlanilla } from '../../datos/planilla.js'
+import { completarPartidos } from '../../datos/reglas.js'
 
 function FilaFalta({ f }) {
   const { ejecutar, mostrarToast } = useApp()
@@ -63,6 +64,11 @@ export function PanelPlayoffs() {
   const partidos = lectura ? lectura.filas.filter((f) => f.tipo === 'partido') : []
   const sirio = partidos.filter((f) => f.equipoId)
   const sinDatos = partidos.filter((f) => !f.hora || !f.cancha || !f.fecha)
+  const fechasNuevas = partidos.map((f) => f.fecha).filter(Boolean).sort()
+  const reales = estado.partidos.filter((p) => !p.derivado)
+  const completados = lectura
+    ? completarPartidos(reales, lectura.filas).filter((p, i) => p !== reales[i] && (p.hora !== reales[i].hora || p.cancha !== reales[i].cancha)).length
+    : 0
 
   return (
     <>
@@ -71,7 +77,7 @@ export function PanelPlayoffs() {
         <main className="contenido g">
           <section className="seccion">
             <span className="chico" style={{ fontWeight: 600 }}>Subir la planilla de la Asociación (Excel)</span>
-            <span className="ayuda">Subí el archivo .xlsx tal como lo mandan. La app lee todas las hojas, ubica los partidos de Argentino Sirio y los suma al fixture de cada categoría. Reemplaza la programación anterior. No toca los datos que baja solo de la Asociación.</span>
+            <span className="ayuda">Subí cada semana (los domingos) el .xlsx tal como lo manda la Asociación. La app lee todas las hojas y lo combina con lo que ya baja solo de la Rosarina: completa el horario y la cancha que falten, sin pisar lo que ya está. Reemplaza las fechas que cubre el archivo y conserva las semanas anteriores.</span>
             <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={leer} disabled={leyendo} />
             {leyendo ? <span className="chico">Leyendo el archivo…</span> : null}
           </section>
@@ -81,6 +87,8 @@ export function PanelPlayoffs() {
               <span className="chico" style={{ fontWeight: 600 }}>
                 Leí {partidos.length} partidos. {sirio.length} son de Argentino Sirio. {sinDatos.length ? `${sinDatos.length} no tienen hora o cancha todavía.` : 'Todos tienen hora y cancha.'}
               </span>
+              {fechasNuevas.length ? <span className="chico suave">Fechas del archivo: del {fechaCorta(fechasNuevas[0])} al {fechaCorta(fechasNuevas[fechasNuevas.length - 1])}.</span> : null}
+              <span className="chico suave">{completados ? `Completa horario o cancha de ${completados} partidos que ya trae la Rosarina.` : 'No hay partidos de la Rosarina para completar con este archivo.'}</span>
               {lectura.avisos.map((a, i) => <span key={i} className="chico suave">{a}</span>)}
               {sirio.map((f) => (
                 <div key={f.orden} className="tarjeta" style={{ padding: 10 }}>

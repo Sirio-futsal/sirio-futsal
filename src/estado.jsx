@@ -133,7 +133,7 @@ function reductor(s, a) {
     case 'programacion/editar': {
       const base = s.programacion || []
       const filas = a.tipo === 'programacion/reemplazar'
-        ? a.filas
+        ? R.combinarProgramacion(base, a.filas)
         : base.map((f) => (f.id === a.fila.id ? { ...f, fecha: a.fila.fecha || null, hora: a.fila.hora || null, cancha: a.fila.cancha || null } : f))
       const reales = s.partidos.filter((p) => !p.derivado)
       return { ...s, programacion: filas, partidos: [...reales, ...R.partidosDePlayoff(filas, reales)] }
@@ -293,7 +293,7 @@ export function ProveedorApp({ children }) {
       if (NUBE_ACTIVA) {
         if (tipo === 'salir') cerrarSesion()
         else if (ACCIONES_NUBE.has(tipo)) {
-          escribir(tipo, datos, estado).catch((e) => {
+          escribir(tipo, datos, estado).then(() => { if (tipo.startsWith('programacion/')) recargar() }).catch((e) => {
             mostrarToast(`No se pudo guardar: ${e?.message || 'error de conexión'}`, 'error')
             recargar()
           })

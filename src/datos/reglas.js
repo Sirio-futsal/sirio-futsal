@@ -215,3 +215,36 @@ export function limpiarNombre(t) {
     .replace(/&([a-zA-Z]+);/g, (m, n) => ENTIDADES[n] ?? m)
   return x.replace(/\b([A-ZÁÉÍÓÚÑ])([ÁÉÍÓÚÑ])([a-záéíóúñ]+)/g, (_, a, b, c) => a + b.toLowerCase() + c).replace(/\b1\s*[º°]\s*de mayo\b/i, '1ro de Mayo')
 }
+
+// Completa horario y cancha de los partidos que baja la Asociación con lo que dice la planilla semanal.
+// Solo llena lo que está vacío: nunca pisa un dato que ya trae la Asociación o que cargó el club.
+export function completarPartidos(partidos, filas) {
+  const delExcel = (filas || []).filter((f) => f.tipo === 'partido' && f.equipoId && f.fecha)
+  if (!delExcel.length) return partidos
+  return partidos.map((p) => {
+    if (p.derivado || !p.fecha || (p.hora && p.cancha)) return p
+    const f = delExcel.find((x) => x.equipoId === p.equipoId && x.fecha === p.fecha)
+    if (!f) return p
+    return { ...p, hora: p.hora || f.hora || null, cancha: p.cancha || f.cancha || null }
+  })
+}
+
+// Une una planilla nueva con lo ya cargado: reemplaza las fechas que cubre la planilla y conserva las anteriores.
+// Lo que la planilla deja vacío (hora, cancha) se mantiene si ya estaba completado.
+export function combinarProgramacion(previas, nuevas) {
+  const fechas = nuevas.filter((f) => f.tipo === 'partido' && f.fecha).map((f) => f.fecha).sort()
+  const [desde, hasta] = [fechas[0], fechas[fechas.length - 1]]
+  const hojasNuevas = new Set(nuevas.map((f) => f.hoja))
+  const clave = (f) => [f.hoja, f.div, f.fecha, f.local, f.visitante].join('|')
+  const viejos = new Map(previas.filter((f) => f.tipo === 'partido').map((f) => [clave(f), f]))
+  const conservar = previas.filter((f) => {
+    if (f.tipo === 'nota') return !hojasNuevas.has(f.hoja)
+    if (!f.fecha) return !hojasNuevas.has(f.hoja)
+    return !(desde && f.fecha >= desde && f.fecha <= hasta)
+  })
+  const completas = nuevas.map((f) => {
+    const v = f.tipo === 'partido' ? viejos.get(clave(f)) : null
+    return v ? { ...f, hora: f.hora || v.hora || null, cancha: f.cancha || v.cancha || null } : f
+  })
+  return [...conservar, ...completas].sort((a, b) => (a.fecha || '9999').localeCompare(b.fecha || '9999') || (a.hora || '99:99').localeCompare(b.hora || '99:99') || (a.orden || 0) - (b.orden || 0))
+}

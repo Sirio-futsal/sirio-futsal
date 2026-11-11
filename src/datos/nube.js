@@ -3,7 +3,7 @@
 // ver o cambiar lo decide la seguridad por fila de la base (supabase/esquema.sql).
 import { createClient } from '@supabase/supabase-js'
 import { equiposBase, boletinBase, clubBase } from './ejemplo.js'
-import { partidosDePlayoff, limpiarNombre } from './reglas.js'
+import { partidosDePlayoff, limpiarNombre, completarPartidos, combinarProgramacion } from './reglas.js'
 
 export const SUPABASE_URL = 'https://vnsqmoyiepgycwgxvbqs.supabase.co'
 export const SUPABASE_CLAVE = 'sb_publishable_ixs_1n9338IiEAGP8vXHUA_KWmhQcMU'
@@ -133,7 +133,7 @@ export async function cargarTodo(preferencias) {
   }
 
   const progs = (programacion || []).map(aProg)
-  const partidosReales = partidos.map(aPartido)
+  const partidosReales = completarPartidos(partidos.map(aPartido), progs)
   return {
     equipos,
     programacion: progs,
@@ -223,10 +223,14 @@ export async function escribir(tipo, a, previo) {
       return revisar(await c.from('boletin').upsert({ id: 1, numero: b.numero, fecha: b.fecha, jugadores: b.jugadores }))
     }
     case 'programacion/reemplazar': {
-      const borrar = await c.from('programacion').delete().not('id', 'is', null)
-      revisar(borrar)
-      const filas = (a.filas || []).map(deProg)
-      for (let i = 0; i < filas.length; i += 100) revisar(await c.from('programacion').insert(filas.slice(i, i + 100)))
+      const previas = previo.programacion || []
+      const final = combinarProgramacion(previas, a.filas || [])
+      const enFinal = new Set(final.map((f) => f.id))
+      const enPrevio = new Set(previas.map((f) => f.id))
+      const borrar = previas.filter((f) => !enFinal.has(f.id)).map((f) => f.id)
+      for (let i = 0; i < borrar.length; i += 100) revisar(await c.from('programacion').delete().in('id', borrar.slice(i, i + 100)))
+      const nuevas = final.filter((f) => !enPrevio.has(f.id)).map(deProg)
+      for (let i = 0; i < nuevas.length; i += 100) revisar(await c.from('programacion').insert(nuevas.slice(i, i + 100)))
       return null
     }
     case 'programacion/editar': {
