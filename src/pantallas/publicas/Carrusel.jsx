@@ -29,7 +29,7 @@ export default function Carrusel() {
       </div>
       <div className="duelo">
         <div className="equipo-duelo">
-          <img src={ESCUDO} alt="Escudo de Sirio" />
+          {proximo.condicion === 'local' ? <img src={ESCUDO} alt="Escudo de Sirio" /> : <span className="escudo-rival">{iniciales(proximo.rival)}</span>}
           <span className="nombre-duelo">{proximo.condicion === 'local' ? 'Sirio' : proximo.rival}</span>
         </div>
         <div className="equipo-duelo">
@@ -57,9 +57,17 @@ export default function Carrusel() {
           <span className="hero-chip">{nombreEquipo(equipoPorId[ultimo.equipoId], categoriaPorId, true)}</span>
         </div>
         <div style={{ textAlign: 'center', display: 'grid', gap: 6 }}>
-          <span className="num" style={{ fontFamily: 'var(--display)', fontSize: 44, fontWeight: 700, lineHeight: 1 }}>
-            {local ? `${ultimo.golesSirio} – ${ultimo.golesRival}` : `${ultimo.golesRival} – ${ultimo.golesSirio}`}
-          </span>
+          <div className="duelo" style={{ alignItems: 'center' }}>
+            <div className="equipo-duelo">
+              {local ? <img src={ESCUDO} alt="Escudo de Sirio" style={{ width: 56, height: 56 }} /> : <span className="escudo-rival">{iniciales(ultimo.rival)}</span>}
+            </div>
+            <span className="num" style={{ fontFamily: 'var(--display)', fontSize: 44, fontWeight: 700, lineHeight: 1 }}>
+              {local ? `${ultimo.golesSirio} – ${ultimo.golesRival}` : `${ultimo.golesRival} – ${ultimo.golesSirio}`}
+            </span>
+            <div className="equipo-duelo">
+              {local ? <span className="escudo-rival">{iniciales(ultimo.rival)}</span> : <img src={ESCUDO} alt="Escudo de Sirio" style={{ width: 56, height: 56 }} />}
+            </div>
+          </div>
           <span style={{ fontWeight: 600 }}>{local ? `Sirio vs ${ultimo.rival}` : `${ultimo.rival} vs Sirio`}</span>
           <span className="hero-suave">{{ G: 'Ganamos', E: 'Empatamos', P: 'Perdimos' }[r]} · {fechaCorta(ultimo.fecha)}</span>
         </div>
