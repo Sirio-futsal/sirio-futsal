@@ -123,16 +123,16 @@ export function Historia() {
   return (
     <section id="historia" className="seccion ancla" aria-labelledby="t-historia">
       <h2 id="t-historia" className="h2">Nuestra historia</h2>
-      <div className="tarjeta" style={{ padding: 14, display: 'grid', gap: 12 }}>
-        {titulo ? <strong style={{ fontFamily: 'var(--display)', fontSize: 20, textTransform: 'uppercase', lineHeight: 1.15 }}>{titulo}</strong> : null}
+      <div className="tarjeta" style={{ padding: 16, display: 'grid', gap: 12, background: 'var(--barra)', color: 'var(--barra-texto)', borderColor: 'var(--dorado)', borderWidth: 2, borderLeftWidth: 6 }}>
+        {titulo ? <strong style={{ fontFamily: 'var(--display)', fontSize: 22, textTransform: 'uppercase', lineHeight: 1.15, color: 'var(--dorado)' }}>{titulo}</strong> : null}
         {visibles.map((p, k) => <p key={k} className="texto-largo">{p}</p>)}
         {cuerpo.length > 1 ? (
-          <button type="button" className="btn btn-secundario" aria-expanded={abierta} onClick={() => setAbierta((v) => !v)}>
+          <button type="button" className="btn btn-primario" aria-expanded={abierta} onClick={() => setAbierta((v) => !v)}>
             {abierta ? 'Ver menos' : 'Conocé más'}
           </button>
         ) : null}
         {abierta || cuerpo.length <= 1 ? (
-          <button type="button" className="btn btn-primario" onClick={irASumate}>Formá parte de nuestro club</button>
+          <button type="button" className="btn" style={{ background: 'var(--dorado)', color: '#0d0f0e' }} onClick={irASumate}>Formá parte de nuestro club</button>
         ) : null}
       </div>
     </section>
