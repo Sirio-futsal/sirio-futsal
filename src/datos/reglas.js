@@ -190,3 +190,18 @@ export function categoriasDeNota(nota) {
   if ((inferiores || m.includes('Primera')) && !fem && !m.includes('Sirio B') && !m.includes('Primera B')) out.add('masc-a')
   return [...out]
 }
+
+export const puedeCargarProgramacion = esAdmin
+
+// Partidos de Sirio que salen de la planilla de playoffs. Se suman a los del fixture
+// sin tocar los datos que baja la Asociación: si ya existe uno real para ese equipo y día, se usa el real.
+export function partidosDePlayoff(filas, partidos) {
+  return (filas || [])
+    .filter((f) => f.tipo === 'partido' && f.equipoId && f.fecha)
+    .filter((f) => !partidos.some((p) => p.id === `po-${f.id}` || (p.equipoId === f.equipoId && p.fecha === f.fecha && !p.derivado)))
+    .map((f) => ({
+      id: `po-${f.id}`, equipoId: f.equipoId, fecha: f.fecha, hora: f.hora || null, horaAnterior: null,
+      rival: f.condicion === 'local' ? f.visitante : f.local, condicion: f.condicion, cancha: f.cancha || null,
+      golesSirio: null, golesRival: null, estado: 'programado', origen: 'playoff', ronda: null, derivado: true, instancia: f.instancia,
+    }))
+}

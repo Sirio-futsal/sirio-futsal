@@ -28,6 +28,16 @@ export default function Inicio() {
           </span>
           <span className="chev" aria-hidden="true">›</span>
         </button>
+        {(estado.programacion || []).some((f) => f.tipo === 'partido' && (!f.fecha || f.fecha >= hoyISO)) ? (
+          <button type="button" className="fila fila-btn" onClick={() => ir('playoffs')}
+            style={{ background: '#0d0f0e', color: 'var(--dorado)', border: '2px solid var(--dorado)', borderRadius: 14, padding: '12px 16px' }}>
+            <span className="crece">
+              <span style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 700, textTransform: 'uppercase' }}>Playoffs</span>
+              <span className="mini" style={{ color: '#fff', opacity: .85 }}>Fechas, horarios y canchas de todas las categorías</span>
+            </span>
+            <span className="chev" aria-hidden="true">›</span>
+          </button>
+        ) : null}
         <MenuSecciones secciones={secciones} />
         <Carrusel />
 

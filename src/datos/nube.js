@@ -3,6 +3,7 @@
 // ver o cambiar lo decide la seguridad por fila de la base (supabase/esquema.sql).
 import { createClient } from '@supabase/supabase-js'
 import { equiposBase, boletinBase, clubBase } from './ejemplo.js'
+import { partidosDePlayoff } from './reglas.js'
 
 export const SUPABASE_URL = 'https://vnsqmoyiepgycwgxvbqs.supabase.co'
 export const SUPABASE_CLAVE = 'sb_publishable_ixs_1n9338IiEAGP8vXHUA_KWmhQcMU'
@@ -59,6 +60,14 @@ const deClub = (c) => ({
   id: 1, historia: c.historia, direccion: c.direccion, telefono: c.telefono, whatsapp: c.whatsapp, instagram: c.instagram,
   indumentaria_texto: c.indumentariaTexto, indumentaria_url: c.indumentariaUrl, sponsors: c.sponsors, archivo: c.archivo,
 })
+const aProg = (r) => ({
+  id: r.id, hoja: r.hoja, torneo: r.torneo || '', instancia: r.instancia || '', tipo: r.tipo, orden: r.orden ?? 0, div: r.div || '', fecha: r.fecha,
+  hora: r.hora, local: r.local || '', visitante: r.visitante || '', cancha: r.cancha, nota: r.nota || '', equipoId: r.equipo_id, condicion: r.condicion,
+})
+const deProg = (f) => ({
+  id: f.id, hoja: f.hoja, torneo: f.torneo || '', instancia: f.instancia || '', tipo: f.tipo, orden: f.orden ?? 0, div: f.div || '', fecha: f.fecha || null,
+  hora: f.hora || null, local: f.local || '', visitante: f.visitante || '', cancha: f.cancha || null, nota: f.nota || '', equipo_id: f.equipoId || null, condicion: f.condicion || null,
+})
 const aFoto = (r) => ({ id: r.id, titulo: r.titulo || '', categoriaId: r.categoria_id || null, temporada: r.temporada || '', url: r.url })
 
 // Estado mientras todavía no llegó nada de la base (sin datos de ejemplo).
@@ -67,7 +76,7 @@ export function estadoVacio(preferencias) {
     equipos: equiposBase.map((e) => ({ ...e, entrenador: '', fotoUrl: null, fotoCargada: false })),
     partidos: [], noticias: [], jugadores: [], usuarios: [], sugerencias: [], inscripciones: [], avisosEnviados: [],
     boletin: { ...boletinBase, jugadores: [] },
-    tablas: [], galeria: [],
+    tablas: [], galeria: [], programacion: [],
     club: Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     sesion: null,
     preferencias,
@@ -77,7 +86,7 @@ export function estadoVacio(preferencias) {
 // Lee todo lo que la persona actual puede ver (la base filtra el resto).
 export async function cargarTodo(preferencias) {
   const c = sb()
-  const [equiposPub, partidos, noticias, boletin, tablas, club, galeria, prensa, sesionRes] = await Promise.all([
+  const [equiposPub, partidos, noticias, boletin, tablas, club, galeria, prensa, programacion, sesionRes] = await Promise.all([
     c.from('equipos_publicos').select('*').then(revisar),
     c.from('partidos').select('*').order('fecha').then(revisar),
     c.from('noticias').select('*').order('fecha', { ascending: false }).order('creada', { ascending: false }).then(revisar),
@@ -86,6 +95,7 @@ export async function cargarTodo(preferencias) {
     c.from('club').select('*').eq('id', 1).maybeSingle().then(revisar),
     c.from('galeria').select('*').order('creada', { ascending: false }).then(revisar),
     c.from('prensa').select('id, fuente, titulo, url, resumen, fecha_publicacion, detectada, menciona_sirio, menciones, temas').order('fecha_publicacion', { ascending: false, nullsFirst: false }).order('detectada', { ascending: false }).limit(150).then(revisar).catch(() => []),
+    c.from('programacion').select('*').order('fecha').order('hora').order('orden').then(revisar).catch(() => []),
     c.auth.getSession(),
   ])
   const sesion = sesionRes.data?.session?.user?.id || null
@@ -122,9 +132,12 @@ export async function cargarTodo(preferencias) {
     }
   }
 
+  const progs = (programacion || []).map(aProg)
+  const partidosReales = partidos.map(aPartido)
   return {
     equipos,
-    partidos: partidos.map(aPartido),
+    programacion: progs,
+    partidos: [...partidosReales, ...partidosDePlayoff(progs, partidosReales)],
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
     usuarios, sugerencias, inscripciones, avisosEnviados,
@@ -142,6 +155,7 @@ export async function cargarTodo(preferencias) {
 export const ACCIONES_NUBE = new Set([
   'partido/guardar', 'noticia/crear', 'noticia/editar', 'noticia/eliminar', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
+  'programacion/reemplazar', 'programacion/editar',
   'equipo/entrenador', 'equipo/foto', 'equipo/fotos', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
 ])
 
@@ -207,6 +221,17 @@ export async function escribir(tipo, a, previo) {
     case 'boletin/guardar': {
       const b = a.boletin
       return revisar(await c.from('boletin').upsert({ id: 1, numero: b.numero, fecha: b.fecha, jugadores: b.jugadores }))
+    }
+    case 'programacion/reemplazar': {
+      const borrar = await c.from('programacion').delete().not('id', 'is', null)
+      revisar(borrar)
+      const filas = (a.filas || []).map(deProg)
+      for (let i = 0; i < filas.length; i += 100) revisar(await c.from('programacion').insert(filas.slice(i, i + 100)))
+      return null
+    }
+    case 'programacion/editar': {
+      const f = a.fila
+      return revisar(await c.from('programacion').update({ fecha: f.fecha || null, hora: f.hora || null, cancha: f.cancha || null }).eq('id', f.id))
     }
     case 'equipo/entrenador':
       return revisar(await c.from('equipos').update({ entrenador: a.entrenador.trim() || null }).eq('id', a.equipoId))

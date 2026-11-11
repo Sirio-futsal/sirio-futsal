@@ -1,0 +1,112 @@
+import { useState } from 'react'
+import { useApp } from '../../estado.jsx'
+import { EncabezadoPanel, NavPanel, SoloAdmin } from './Comun.jsx'
+import { fechaCorta } from '../../componentes/comunes.jsx'
+import { leerPlanilla } from '../../datos/planilla.js'
+
+function FilaFalta({ f }) {
+  const { ejecutar, mostrarToast } = useApp()
+  const [hora, setHora] = useState(f.hora || '')
+  const [cancha, setCancha] = useState(f.cancha || '')
+  const guardar = () => {
+    const h = hora.trim()
+    if (h && !/^\d{1,2}:\d{2}$/.test(h)) { mostrarToast('La hora va así: 20:30', 'error'); return }
+    const hh = h ? h.padStart(5, '0') : null
+    if (ejecutar('programacion/editar', { fila: { ...f, hora: hh, cancha: cancha.trim() || null } })) mostrarToast('Guardado.')
+  }
+  return (
+    <div className="tarjeta g" style={{ padding: 12 }}>
+      <span className="chico" style={{ fontWeight: 600 }}>{f.torneo}{f.div ? ` · ${f.div}` : ''} · {f.fecha ? fechaCorta(f.fecha) : 'sin fecha'}</span>
+      <span className="chico">{f.local} vs {f.visitante}</span>
+      <div className="grilla-2">
+        <div className="campo"><label>Hora</label><input className="control" inputMode="numeric" placeholder="20:30" value={hora} onChange={(e) => setHora(e.target.value)} /></div>
+        <div className="campo"><label>Cancha</label><input className="control" value={cancha} onChange={(e) => setCancha(e.target.value)} /></div>
+      </div>
+      <button type="button" className="btn btn-secundario" onClick={guardar}>Guardar</button>
+    </div>
+  )
+}
+
+export function PanelPlayoffs() {
+  const { estado, ejecutar, mostrarToast } = useApp()
+  const [leyendo, setLeyendo] = useState(false)
+  const [lectura, setLectura] = useState(null)
+  const actuales = (estado.programacion || []).filter((f) => f.tipo === 'partido')
+  const faltan = actuales.filter((f) => !f.hora || !f.cancha || !f.fecha)
+
+  const leer = async (e) => {
+    const archivo = e.target.files?.[0]
+    e.target.value = ''
+    if (!archivo) return
+    if (!/\.xlsx$/i.test(archivo.name)) { mostrarToast('Elegí el archivo Excel (.xlsx) que mandó la Asociación.', 'error'); return }
+    setLeyendo(true)
+    setLectura(null)
+    try {
+      const r = await leerPlanilla(await archivo.arrayBuffer())
+      if (!r.filas.length) throw new Error('No encontré partidos en el archivo.')
+      setLectura(r)
+    } catch (err) {
+      mostrarToast(`No pude leer el archivo: ${err?.message || 'error'}`, 'error')
+    } finally {
+      setLeyendo(false)
+    }
+  }
+
+  const publicar = () => {
+    if (!lectura) return
+    if (ejecutar('programacion/reemplazar', { filas: lectura.filas })) {
+      mostrarToast('Playoffs publicados.')
+      setLectura(null)
+    }
+  }
+
+  const partidos = lectura ? lectura.filas.filter((f) => f.tipo === 'partido') : []
+  const sirio = partidos.filter((f) => f.equipoId)
+  const sinDatos = partidos.filter((f) => !f.hora || !f.cancha || !f.fecha)
+
+  return (
+    <>
+      <EncabezadoPanel titulo="Playoffs" volverA="panel-mas" />
+      <SoloAdmin>
+        <main className="contenido g">
+          <section className="seccion">
+            <span className="chico" style={{ fontWeight: 600 }}>Subir la planilla de la Asociación (Excel)</span>
+            <span className="ayuda">Subí el archivo .xlsx tal como lo mandan. La app lee todas las hojas, ubica los partidos de Argentino Sirio y los suma al fixture de cada categoría. Reemplaza la programación anterior. No toca los datos que baja solo de la Asociación.</span>
+            <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={leer} disabled={leyendo} />
+            {leyendo ? <span className="chico">Leyendo el archivo…</span> : null}
+          </section>
+
+          {lectura ? (
+            <section className="seccion g">
+              <span className="chico" style={{ fontWeight: 600 }}>
+                Leí {partidos.length} partidos. {sirio.length} son de Argentino Sirio. {sinDatos.length ? `${sinDatos.length} no tienen hora o cancha todavía.` : 'Todos tienen hora y cancha.'}
+              </span>
+              {lectura.avisos.map((a, i) => <span key={i} className="chico suave">{a}</span>)}
+              {sirio.map((f) => (
+                <div key={f.orden} className="tarjeta" style={{ padding: 10 }}>
+                  <span className="chico" style={{ fontWeight: 600 }}>{f.torneo}{f.div ? ` · ${f.div}` : ''} · {f.fecha ? fechaCorta(f.fecha) : 'sin fecha'} · {f.hora || 'hora a confirmar'}</span>
+                  <p className="chico suave" style={{ margin: '4px 0 0' }}>{f.local} vs {f.visitante} · {f.cancha || 'cancha a confirmar'}</p>
+                </div>
+              ))}
+              <span className="ayuda">Revisá los partidos de Sirio. Si está bien, publicá.</span>
+              <button type="button" className="btn btn-primario" onClick={publicar}>Publicar playoffs</button>
+            </section>
+          ) : null}
+
+          <section className="seccion g">
+            <h2 className="h2" style={{ fontSize: 20 }}>Datos que faltan</h2>
+            {faltan.length === 0 ? (
+              <p className="chico suave" style={{ margin: 0 }}>{actuales.length ? 'Todos los partidos tienen fecha, hora y cancha.' : 'Todavía no hay playoffs cargados.'}</p>
+            ) : (
+              <>
+                <p className="chico suave" style={{ margin: 0 }}>Completá la hora y la cancha cuando la Asociación las confirme. Se publica en el momento.</p>
+                {faltan.map((f) => <FilaFalta key={`${f.id}-${f.hora}-${f.cancha}`} f={f} />)}
+              </>
+            )}
+          </section>
+        </main>
+      </SoloAdmin>
+      <NavPanel actual="panel-mas" />
+    </>
+  )
+}

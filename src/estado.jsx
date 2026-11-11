@@ -17,6 +17,7 @@ function estadoGuardadoOInicial() {
     tablas: g.tablas || base.tablas,
     club: g.club || base.club,
     galeria: g.galeria || [],
+    programacion: g.programacion || [],
     equipos: g.equipos.map((e) => ({ entrenador: '', fotoUrl: null, ...e })),
   }
 }
@@ -128,6 +129,15 @@ function reductor(s, a) {
       return { ...s, avisosEnviados: [{ ...a.aviso, id: a.aviso.id || nuevoId('a') }, ...s.avisosEnviados] }
     case 'boletin/guardar':
       return { ...s, boletin: a.boletin }
+    case 'programacion/reemplazar':
+    case 'programacion/editar': {
+      const base = s.programacion || []
+      const filas = a.tipo === 'programacion/reemplazar'
+        ? a.filas
+        : base.map((f) => (f.id === a.fila.id ? { ...f, fecha: a.fila.fecha || null, hora: a.fila.hora || null, cancha: a.fila.cancha || null } : f))
+      const reales = s.partidos.filter((p) => !p.derivado)
+      return { ...s, programacion: filas, partidos: [...reales, ...R.partidosDePlayoff(filas, reales)] }
+    }
     case 'inscripcion/crear':
       return { ...s, inscripciones: [{ ...a.inscripcion, id: a.inscripcion.id || nuevoId('i') }, ...s.inscripciones] }
     case 'preferencias':
@@ -169,6 +179,9 @@ function permiso(tipo, datos, usuario, estado) {
     case 'aviso/enviar':
       if (datos.aviso.equipoId) return R.puedeEnviarAvisoDeEquipo(usuario, datos.aviso.equipoId) || 'No podés enviar avisos de ese equipo.'
       return R.puedeEnviarAvisoGeneral(usuario) || 'Solo la administradora envía avisos generales.'
+    case 'programacion/reemplazar':
+    case 'programacion/editar':
+      return R.puedeCargarProgramacion(usuario) || 'Solo la administradora carga los playoffs.'
     case 'boletin/guardar':
       return R.puedeCargarBoletin(usuario) || 'Solo la administradora carga el boletín.'
     case 'equipo/entrenador':
@@ -196,6 +209,7 @@ function conIds(tipo, d) {
     case 'aviso/enviar': return { ...d, aviso: { ...d.aviso, id: d.aviso.id || nuevoId('a') } }
     case 'galeria/agregar': return { ...d, foto: { ...d.foto, id: d.foto.id || nuevoId('g') } }
     case 'inscripcion/crear': return { ...d, inscripcion: { ...d.inscripcion, id: d.inscripcion.id || nuevoId('i') } }
+    case 'programacion/reemplazar': return { ...d, filas: d.filas.map((f) => ({ ...f, id: f.id || nuevoId('pg') })) }
     case 'entrenador/invitar': return { ...d, id: d.id || `inv-${idUnico()}` }
     default: return d
   }

@@ -27,6 +27,7 @@ export function PanelMas() {
             <>
               <Item vista="panel-entrenadores" titulo="Accesos de entrenadores" detalle="Invitar y asignar equipos" cifra={estado.usuarios.filter((u) => u.rol === 'entrenador').length} />
               <Item vista="panel-rosarina" titulo="Datos de la Rosarina" detalle="Revisar y aprobar antes de publicar" cifra={estado.sugerencias.length} />
+              <Item vista="panel-playoffs" titulo="Playoffs" detalle="Subir la planilla de la Asociación" cifra={(estado.programacion || []).filter((f) => f.tipo === 'partido').length} />
               <Item vista="panel-tablas" titulo="Tablas de posiciones" detalle="Copiar de la web de la Rosarina" cifra={(estado.tablas || []).length} />
               <Item vista="panel-galeria" titulo="Galería de fotos" detalle="Subir y quitar fotos" cifra={(estado.galeria || []).length} />
               <Item vista="panel-club" titulo="Datos del club" detalle="Historia, contacto, sponsors y archivo" />

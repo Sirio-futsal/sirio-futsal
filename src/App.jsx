@@ -5,6 +5,7 @@ import Fixture from './pantallas/publicas/Fixture.jsx'
 import Partido from './pantallas/publicas/Partido.jsx'
 import { ListaCategorias, DetalleCategoria } from './pantallas/publicas/Categorias.jsx'
 import { ListaNoticias, DetalleNoticia } from './pantallas/publicas/Noticias.jsx'
+import Playoffs from './pantallas/publicas/Playoffs.jsx'
 import Tablas from './pantallas/publicas/Tablas.jsx'
 import Mas from './pantallas/publicas/Mas.jsx'
 import Avisos from './pantallas/publicas/Avisos.jsx'
@@ -14,6 +15,7 @@ import PanelInicio from './pantallas/panel/Inicio.jsx'
 import PanelPartidos from './pantallas/panel/Partidos.jsx'
 import PanelNoticias from './pantallas/panel/Noticias.jsx'
 import PanelPlanteles from './pantallas/panel/Planteles.jsx'
+import { PanelPlayoffs } from './pantallas/panel/Playoffs.jsx'
 import { PanelBoletin } from './pantallas/panel/Boletin.jsx'
 import { PanelSincronizacion } from './pantallas/panel/Sincronizacion.jsx'
 import { PanelTablas, PanelClub, PanelGaleria } from './pantallas/panel/Contenido.jsx'
@@ -30,6 +32,7 @@ const PANEL = {
   'panel-inscriptos': PanelInscriptos,
   'panel-aviso': PanelAviso,
   'panel-boletin': PanelBoletin,
+  'panel-playoffs': PanelPlayoffs,
   'panel-sync': PanelSincronizacion,
   'panel-tablas': PanelTablas,
   'panel-club': PanelClub,
@@ -51,6 +54,7 @@ function Pantalla() {
   if (vista.startsWith('noticia-')) return <DetalleNoticia id={vista.slice('noticia-'.length)} />
   switch (vista) {
     case 'tablas': return <Tablas />
+    case 'playoffs': return <Playoffs />
     case 'fixture': return <Fixture />
     case 'categorias': return <ListaCategorias />
     case 'noticias': return <ListaNoticias />
