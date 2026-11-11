@@ -172,12 +172,12 @@ export function Sumate() {
     ].filter(Boolean).join('\n')
     window.open(`https://wa.me/${WA_SECRETARIA}?text=${encodeURIComponent(txt)}`, '_blank', 'noopener,noreferrer')
   }
-  const campo = { width: '100%', padding: '10px 12px', borderRadius: 10, border: 0, fontSize: 16, boxSizing: 'border-box' }
+  const campo = { display: 'block', width: '100%', minWidth: 0, maxWidth: '100%', height: 48, padding: '10px 12px', borderRadius: 10, border: 0, fontSize: 16, boxSizing: 'border-box', background: '#ffffff', color: '#0d0f0e', WebkitAppearance: 'none', appearance: 'none', textAlign: 'left', fontFamily: 'inherit' }
   return (
     <section id="sumate" className="hero ancla" style={{ background: 'var(--accion)', color: 'var(--accion-texto)' }} aria-labelledby="t-sumate">
       <h2 id="t-sumate" className="h2" style={{ fontSize: 26 }}>¿Querés jugar en Sirio?</h2>
       <p style={{ margin: 0, fontSize: 14 }}>Completá tus datos y le llegan directo a la secretaría por WhatsApp.</p>
-      <form onSubmit={enviar} style={{ display: 'grid', gap: 8 }}>
+      <form className="form-sumate" onSubmit={enviar} style={{ display: 'grid', gap: 8 }}>
         <input style={campo} placeholder="Nombre y apellido" value={f.nombre} onChange={set('nombre')} autoComplete="name" required />
         <input style={campo} type="date" aria-label="Fecha de nacimiento" value={f.nacimiento} onChange={set('nacimiento')} />
         <select style={campo} aria-label="Categoría" value={f.categoria} onChange={set('categoria')}>
@@ -185,7 +185,7 @@ export function Sumate() {
           {(categorias || []).map((c) => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
         </select>
         <input style={campo} type="tel" placeholder="Tu teléfono" value={f.telefono} onChange={set('telefono')} autoComplete="tel" required />
-        <textarea style={campo} rows={2} placeholder="Comentario (opcional)" value={f.mensaje} onChange={set('mensaje')} />
+        <textarea style={{ ...campo, height: 'auto' }} rows={2} placeholder="Comentario (opcional)" value={f.mensaje} onChange={set('mensaje')} />
         <button type="submit" className="btn btn-hero" disabled={!listo}>Enviar por WhatsApp</button>
       </form>
     </section>

@@ -225,3 +225,10 @@ textarea.control { padding: 10px 12px; min-height: 96px; resize: vertical; }
 .galeria-grilla img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .foto-equipo img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
 .texto-largo { white-space: pre-line; margin: 0; line-height: 1.55; font-size: 14px; }
+
+.form-sumate input, .form-sumate select, .form-sumate textarea { color: #0d0f0e; background: #ffffff; }
+.form-sumate ::placeholder { color: #4a524d; opacity: 1; }
+.form-sumate input[type='date'] { color: #0d0f0e; -webkit-text-fill-color: #0d0f0e; min-height: 48px; }
+.form-sumate input[type='date']::-webkit-date-and-time-value { text-align: left; }
+.form-sumate .btn-hero { background: #ffffff; color: #0d0f0e; height: 48px; }
+.form-sumate .btn-hero:disabled { opacity: .7; }
