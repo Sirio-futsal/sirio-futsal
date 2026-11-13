@@ -243,7 +243,7 @@ export async function escribir(tipo, a, previo) {
     }
     case 'programacion/editar': {
       const f = a.fila
-      return revisar(await c.from('programacion').update({ fecha: f.fecha || null, hora: f.hora || null, cancha: f.cancha || null }).eq('id', f.id))
+      return revisar(await c.from('programacion').update({ fecha: f.fecha || null, hora: f.hora || null, cancha: f.cancha || null, nota: f.tipo === 'partido' ? 'manual' : (f.nota || '') }).eq('id', f.id))
     }
     case 'equipo/entrenador':
       return revisar(await c.from('equipos').update({ entrenador: a.entrenador.trim() || null }).eq('id', a.equipoId))

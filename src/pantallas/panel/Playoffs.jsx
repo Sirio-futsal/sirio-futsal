@@ -7,20 +7,24 @@ import { completarPartidos } from '../../datos/reglas.js'
 
 function FilaFalta({ f }) {
   const { ejecutar, mostrarToast } = useApp()
+  const [fecha, setFecha] = useState(f.fecha || '')
   const [hora, setHora] = useState(f.hora || '')
   const [cancha, setCancha] = useState(f.cancha || '')
   const guardar = () => {
-    const h = hora.trim()
-    if (h && !/^\d{1,2}:\d{2}$/.test(h)) { mostrarToast('La hora va así: 20:30', 'error'); return }
+    const h = hora.trim().replace('.', ':')
+    if (h && !/^\d{1,2}:\d{2}$/.test(h)) { mostrarToast('La hora va así: 21:00', 'error'); return }
+    if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) { mostrarToast('Elegí la fecha del calendario.', 'error'); return }
     const hh = h ? h.padStart(5, '0') : null
-    if (ejecutar('programacion/editar', { fila: { ...f, hora: hh, cancha: cancha.trim() || null } })) mostrarToast('Guardado.')
+    if (ejecutar('programacion/editar', { fila: { ...f, fecha: fecha || null, hora: hh, cancha: cancha.trim() || null } })) mostrarToast('Guardado. Ya se ve en la app.')
   }
   return (
     <div className="tarjeta g" style={{ padding: 12 }}>
-      <span className="chico" style={{ fontWeight: 600 }}>{f.torneo}{f.div ? ` · ${f.div}` : ''} · {f.fecha ? fechaCorta(f.fecha) : 'sin fecha'}</span>
+      <span className="chico" style={{ fontWeight: 600 }}>{f.torneo}{f.div ? ` · ${f.div}` : ''} · {f.fecha ? fechaCorta(f.fecha) : 'sin fecha'}{f.hora ? ` · ${f.hora}` : ''}</span>
       <span className="chico">{f.local} vs {f.visitante}</span>
+      {f.nota === 'manual' ? <span className="chico suave">Corregido por el club: la planilla de la Asociación no lo pisa.</span> : null}
+      <div className="campo"><label>Fecha</label><input className="control" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} /></div>
       <div className="grilla-2">
-        <div className="campo"><label>Hora</label><input className="control" inputMode="numeric" placeholder="20:30" value={hora} onChange={(e) => setHora(e.target.value)} /></div>
+        <div className="campo"><label>Hora</label><input className="control" inputMode="numeric" placeholder="21:00" value={hora} onChange={(e) => setHora(e.target.value)} /></div>
         <div className="campo"><label>Cancha</label><input className="control" value={cancha} onChange={(e) => setCancha(e.target.value)} /></div>
       </div>
       <button type="button" className="btn btn-secundario" onClick={guardar}>Guardar</button>
@@ -33,7 +37,9 @@ export function PanelPlayoffs() {
   const [leyendo, setLeyendo] = useState(false)
   const [lectura, setLectura] = useState(null)
   const actuales = (estado.programacion || []).filter((f) => f.tipo === 'partido')
-  const faltan = actuales.filter((f) => !f.hora || !f.cancha || !f.fecha)
+  const deSirio = actuales.filter((f) => f.equipoId)
+  const otros = actuales.filter((f) => !f.equipoId)
+  const faltan = otros.filter((f) => !f.hora || !f.cancha || !f.fecha)
 
   const leer = async (e) => {
     const archivo = e.target.files?.[0]
@@ -102,7 +108,19 @@ export function PanelPlayoffs() {
           ) : null}
 
           <section className="seccion g">
-            <h2 className="h2" style={{ fontSize: 20 }}>Datos que faltan</h2>
+            <h2 className="h2" style={{ fontSize: 20 }}>Partidos de Argentino Sirio</h2>
+            {deSirio.length === 0 ? (
+              <p className="chico suave" style={{ margin: 0 }}>Todavía no hay partidos de Sirio en la planilla.</p>
+            ) : (
+              <>
+                <p className="chico suave" style={{ margin: 0 }}>Si hay un error o un cambio de fecha, hora o cancha, corregilo acá y tocá Guardar. Se publica en el momento y la próxima planilla de la Asociación no lo pisa.</p>
+                {deSirio.map((f) => <FilaFalta key={`${f.id}-${f.fecha}-${f.hora}-${f.cancha}`} f={f} />)}
+              </>
+            )}
+          </section>
+
+          <section className="seccion g">
+            <h2 className="h2" style={{ fontSize: 20 }}>Otros partidos: datos que faltan</h2>
             {faltan.length === 0 ? (
               <p className="chico suave" style={{ margin: 0 }}>{actuales.length ? 'Todos los partidos tienen fecha, hora y cancha.' : 'Todavía no hay playoffs cargados.'}</p>
             ) : (
@@ -112,6 +130,13 @@ export function PanelPlayoffs() {
               </>
             )}
           </section>
+
+          {otros.length ? (
+            <details className="seccion g">
+              <summary className="chico" style={{ fontWeight: 600 }}>Corregir cualquier otro partido ({otros.length})</summary>
+              {otros.map((f) => <FilaFalta key={`${f.id}-${f.fecha}-${f.hora}-${f.cancha}-t`} f={f} />)}
+            </details>
+          ) : null}
         </main>
       </SoloAdmin>
       <NavPanel actual="panel-mas" />

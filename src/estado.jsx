@@ -134,7 +134,7 @@ function reductor(s, a) {
       const base = s.programacion || []
       const filas = a.tipo === 'programacion/reemplazar'
         ? R.combinarProgramacion(base, a.filas)
-        : base.map((f) => (f.id === a.fila.id ? { ...f, fecha: a.fila.fecha || null, hora: a.fila.hora || null, cancha: a.fila.cancha || null } : f))
+        : base.map((f) => (f.id === a.fila.id ? { ...f, fecha: a.fila.fecha || null, hora: a.fila.hora || null, cancha: a.fila.cancha || null, nota: f.tipo === 'partido' ? 'manual' : f.nota } : f))
       const reales = s.partidos.filter((p) => !p.derivado)
       return { ...s, programacion: filas, partidos: [...reales, ...R.partidosDePlayoff(filas, reales)] }
     }

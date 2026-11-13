@@ -222,9 +222,12 @@ export function completarPartidos(partidos, filas) {
   const delExcel = (filas || []).filter((f) => f.tipo === 'partido' && f.equipoId && f.fecha)
   if (!delExcel.length) return partidos
   return partidos.map((p) => {
-    if (p.derivado || !p.fecha || (p.hora && p.cancha)) return p
+    if (p.derivado || !p.fecha) return p
     const f = delExcel.find((x) => x.equipoId === p.equipoId && x.fecha === p.fecha)
     if (!f) return p
+    // Lo que corrigió el club a mano (nota 'manual') manda sobre lo que baja la Asociación.
+    if (f.nota === 'manual') return { ...p, hora: f.hora || p.hora, cancha: f.cancha || p.cancha }
+    if (p.hora && p.cancha) return p
     return { ...p, hora: p.hora || f.hora || null, cancha: p.cancha || f.cancha || null }
   })
 }
@@ -236,15 +239,22 @@ export function combinarProgramacion(previas, nuevas) {
   const [desde, hasta] = [fechas[0], fechas[fechas.length - 1]]
   const hojasNuevas = new Set(nuevas.map((f) => f.hoja))
   const clave = (f) => [f.hoja, f.div, f.fecha, f.local, f.visitante].join('|')
+  // Un partido corregido a mano (nota 'manual') no lo pisa la planilla: se conserva tal como lo dejó el club.
+  const claveEquipos = (f) => [f.hoja, f.div, f.instancia, f.local, f.visitante].join('|')
+  const manuales = previas.filter((f) => f.tipo === 'partido' && f.nota === 'manual')
+  const clavesManuales = new Set(manuales.map(claveEquipos))
   const viejos = new Map(previas.filter((f) => f.tipo === 'partido').map((f) => [clave(f), f]))
   const conservar = previas.filter((f) => {
+    if (f.tipo === 'partido' && f.nota === 'manual') return true
     if (f.tipo === 'nota') return !hojasNuevas.has(f.hoja)
     if (!f.fecha) return !hojasNuevas.has(f.hoja)
     return !(desde && f.fecha >= desde && f.fecha <= hasta)
   })
-  const completas = nuevas.map((f) => {
-    const v = f.tipo === 'partido' ? viejos.get(clave(f)) : null
-    return v ? { ...f, hora: f.hora || v.hora || null, cancha: f.cancha || v.cancha || null } : f
-  })
+  const completas = nuevas
+    .filter((f) => !(f.tipo === 'partido' && clavesManuales.has(claveEquipos(f))))
+    .map((f) => {
+      const v = f.tipo === 'partido' ? viejos.get(clave(f)) : null
+      return v ? { ...f, hora: f.hora || v.hora || null, cancha: f.cancha || v.cancha || null } : f
+    })
   return [...conservar, ...completas].sort((a, b) => (a.fecha || '9999').localeCompare(b.fecha || '9999') || (a.hora || '99:99').localeCompare(b.hora || '99:99') || (a.orden || 0) - (b.orden || 0))
 }
