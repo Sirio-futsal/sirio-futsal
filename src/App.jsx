@@ -19,7 +19,7 @@ import { PanelPlayoffs } from './pantallas/panel/Playoffs.jsx'
 import { PanelBoletin } from './pantallas/panel/Boletin.jsx'
 import { PanelSincronizacion } from './pantallas/panel/Sincronizacion.jsx'
 import { PanelTablas, PanelClub, PanelGaleria } from './pantallas/panel/Contenido.jsx'
-import { PanelMas, PanelEntrenadores, PanelRosarina, PanelInscriptos, PanelAviso } from './pantallas/panel/Mas.jsx'
+import { PanelMas, PanelEntrenadores, PanelActividad, PanelRosarina, PanelInscriptos, PanelAviso } from './pantallas/panel/Mas.jsx'
 
 const PANEL = {
   panel: PanelInicio,
@@ -28,6 +28,7 @@ const PANEL = {
   'panel-planteles': PanelPlanteles,
   'panel-mas': PanelMas,
   'panel-entrenadores': PanelEntrenadores,
+  'panel-actividad': PanelActividad,
   'panel-rosarina': PanelRosarina,
   'panel-inscriptos': PanelInscriptos,
   'panel-aviso': PanelAviso,

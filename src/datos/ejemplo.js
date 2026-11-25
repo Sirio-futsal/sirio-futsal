@@ -235,6 +235,7 @@ export function estadoInicial(hoy = new Date()) {
     sugerencias: crearSugerencias(),
     inscripciones: inscripcionesBase.map((i) => ({ ...i, fecha: fechaISO(hoy, -1) })),
     avisosEnviados: [],
+    actividad: [],
     boletin: boletinBase,
     tablas: crearTablas(hoy),
     club: { ...clubBase },

@@ -74,7 +74,7 @@ const aFoto = (r) => ({ id: r.id, titulo: r.titulo || '', categoriaId: r.categor
 export function estadoVacio(preferencias) {
   return {
     equipos: equiposBase.map((e) => ({ ...e, entrenador: '', fotoUrl: null, fotoCargada: false })),
-    partidos: [], noticias: [], jugadores: [], usuarios: [], sugerencias: [], inscripciones: [], avisosEnviados: [],
+    partidos: [], noticias: [], jugadores: [], usuarios: [], sugerencias: [], inscripciones: [], avisosEnviados: [], actividad: [],
     boletin: { ...boletinBase, jugadores: [] },
     tablas: [], galeria: [], programacion: [],
     club: Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
@@ -106,10 +106,11 @@ export async function cargarTodo(preferencias) {
   let sugerencias = []
   let inscripciones = []
   let avisosEnviados = []
+  let actividad = []
 
   if (sesion) {
     const perfiles = await c.from('profiles').select('*').then(revisar)
-    usuarios = perfiles.map((p) => ({ id: p.id, rol: p.rol, nombre: p.nombre, email: p.email, equipos: p.equipos || [], pendiente: false }))
+    usuarios = perfiles.map((p) => ({ id: p.id, rol: p.rol, nombre: p.nombre, email: p.email, equipos: p.equipos || [], activo: p.activo !== false, pendiente: false }))
     const yo = usuarios.find((u) => u.id === sesion)
     if (yo) {
       const privados = await c.from('jugadores').select('*').then(revisar)
@@ -119,6 +120,7 @@ export async function cargarTodo(preferencias) {
       const urls = new Map(propios.map((r) => [r.id, r]))
       equipos = equipos.map((e) => (urls.has(e.id) ? { ...e, fotoUrl: urls.get(e.id).foto_url || null, fotos: urls.get(e.id).fotos || [], fotoCargada: !!urls.get(e.id).foto_url } : e))
       avisosEnviados = (await c.from('avisos_enviados').select('*').order('creado', { ascending: false }).limit(30).then(revisar)).map(aAviso)
+      actividad = (await c.from('actividad').select('*').order('creado', { ascending: false }).limit(100).then(revisar)).map((r) => ({ id: r.id, creado: r.creado, quien: r.usuario_nombre || 'Sistema', accion: r.accion, equipoId: r.equipo_id, detalle: r.detalle || '' }))
       if (yo.rol === 'admin') {
         const [inv, sug, ins] = await Promise.all([
           c.from('invitaciones').select('*').order('creada').then(revisar),
@@ -148,7 +150,7 @@ export async function cargarTodo(preferencias) {
     partidos: [...partidosReales, ...partidosDePlayoff(progs, partidosReales)],
     noticias: noticias.map(aNoticia),
     jugadores: [...jugadores.values()],
-    usuarios, sugerencias, inscripciones, avisosEnviados,
+    usuarios, sugerencias, inscripciones, avisosEnviados, actividad,
     tablas: tablas.filter((t) => (t.temporada ?? Number(String(t.actualizada).slice(0, 4))) === anio).map((t) => ({ equipoId: t.equipo_id, filas: (t.filas || []).map((f) => (f && typeof f.equipo === 'string' ? { ...f, equipo: limpiarNombre(f.equipo) } : f)), actualizada: t.actualizada, fuente: t.fuente || 'manual' })),
     club: club ? aClub(club) : Object.fromEntries(Object.keys(clubBase).map((k) => [k, ''])),
     galeria: galeria.map(aFoto),
@@ -161,7 +163,7 @@ export async function cargarTodo(preferencias) {
 
 // Acciones que se guardan en la base. `previo` es el estado antes de aplicar la acción.
 export const ACCIONES_NUBE = new Set([
-  'partido/guardar', 'noticia/crear', 'noticia/editar', 'noticia/eliminar', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos',
+  'partido/guardar', 'noticia/crear', 'noticia/editar', 'noticia/eliminar', 'jugador/agregar', 'jugador/autorizacion', 'entrenador/invitar', 'entrenador/equipos', 'entrenador/activo',
   'entrenador/quitar', 'sugerencia/aprobar', 'sugerencia/descartar', 'aviso/enviar', 'inscripcion/crear', 'boletin/guardar',
   'programacion/reemplazar', 'programacion/editar',
   'equipo/entrenador', 'equipo/foto', 'equipo/fotos', 'tabla/guardar', 'club/guardar', 'galeria/agregar', 'galeria/quitar',
@@ -202,6 +204,8 @@ export async function escribir(tipo, a, previo) {
       return revisar(esInvitacion(a.usuarioId)
         ? await c.from('invitaciones').update({ equipos: a.equipos }).eq('id', idInvitacion(a.usuarioId))
         : await c.from('profiles').update({ equipos: a.equipos }).eq('id', a.usuarioId))
+    case 'entrenador/activo':
+      return revisar(await c.from('profiles').update({ activo: !!a.activo }).eq('id', a.usuarioId))
     case 'entrenador/quitar':
       return revisar(esInvitacion(a.usuarioId)
         ? await c.from('invitaciones').delete().eq('id', idInvitacion(a.usuarioId))

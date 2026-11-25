@@ -20,7 +20,7 @@ beforeEach(() => window.localStorage.clear())
 afterEach(() => cleanup())
 
 const publicas = ['inicio', 'fixture', 'categorias', 'categoria-masc-a', 'categoria-fem-b', 'categoria-escuelita', 'noticias', 'noticia-n1', 'mas', 'avisos', 'galeria', 'partido-p1', 'partido-p7']
-const panel = ['panel', 'panel-partidos', 'panel-noticias', 'panel-planteles', 'panel-mas', 'panel-entrenadores', 'panel-rosarina', 'panel-inscriptos', 'panel-aviso', 'panel-boletin', 'panel-tablas', 'panel-club', 'panel-galeria']
+const panel = ['panel', 'panel-partidos', 'panel-noticias', 'panel-planteles', 'panel-mas', 'panel-entrenadores', 'panel-actividad', 'panel-rosarina', 'panel-inscriptos', 'panel-aviso', 'panel-boletin', 'panel-tablas', 'panel-club', 'panel-galeria']
 
 describe('todas las pantallas se abren sin errores', () => {
   for (const v of publicas) {
@@ -77,7 +77,7 @@ describe('privacidad y permisos en pantalla', () => {
     expect(container.textContent).not.toMatch(/\d{2}\.?\d{3}\.?\d{3}/)
   })
   it('las secciones solo para la administradora quedan bloqueadas para el entrenador', () => {
-    montar('panel-entrenadores', 'e1')
+    montar('panel-entrenadores', 'panel-actividad', 'e1')
     expect(screen.getByText('Esta sección es solo para la administradora.')).toBeTruthy()
   })
   it('el entrenador no puede cargar resultados de otro equipo', () => {

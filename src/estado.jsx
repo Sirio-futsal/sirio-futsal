@@ -111,6 +111,8 @@ function reductor(s, a) {
       }
     case 'entrenador/equipos':
       return { ...s, usuarios: s.usuarios.map((u) => (u.id === a.usuarioId ? { ...u, equipos: a.equipos } : u)) }
+    case 'entrenador/activo':
+      return { ...s, usuarios: s.usuarios.map((u) => (u.id === a.usuarioId ? { ...u, activo: !!a.activo } : u)) }
     case 'entrenador/quitar':
       return { ...s, usuarios: s.usuarios.filter((u) => u.id !== a.usuarioId) }
     case 'sugerencia/aprobar': {
@@ -171,6 +173,7 @@ function permiso(tipo, datos, usuario, estado) {
       return R.puedeGestionarAutorizaciones(usuario) || 'Solo la administradora puede cambiar autorizaciones.'
     case 'entrenador/invitar':
     case 'entrenador/equipos':
+    case 'entrenador/activo':
     case 'entrenador/quitar':
       return R.puedeGestionarEntrenadores(usuario) || 'Solo la administradora gestiona entrenadores.'
     case 'sugerencia/aprobar':

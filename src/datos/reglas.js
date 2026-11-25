@@ -8,7 +8,7 @@ export const esAdmin = (u) => !!u && u.rol === 'admin'
 export function puedeEditarEquipo(usuario, equipoId) {
   if (!usuario) return false
   if (esAdmin(usuario)) return true
-  return usuario.rol === 'entrenador' && !usuario.pendiente && usuario.equipos.includes(equipoId)
+  return usuario.rol === 'entrenador' && !usuario.pendiente && usuario.activo !== false && usuario.equipos.includes(equipoId)
 }
 
 export function equiposEditables(usuario, equipos) {
@@ -19,7 +19,7 @@ export function equiposEditables(usuario, equipos) {
 // un entrenador solo en las categorías donde tiene algún equipo.
 export function puedePublicarEnCategoria(usuario, categoriaId, equipos) {
   if (esAdmin(usuario)) return true
-  if (!usuario || usuario.rol !== 'entrenador' || usuario.pendiente || categoriaId == null) return false
+  if (!usuario || usuario.rol !== 'entrenador' || usuario.pendiente || usuario.activo === false || categoriaId == null) return false
   return equipos.some((e) => e.categoriaId === categoriaId && usuario.equipos.includes(e.id))
 }
 

@@ -26,6 +26,7 @@ export function PanelMas() {
           {admin ? (
             <>
               <Item vista="panel-entrenadores" titulo="Accesos de entrenadores" detalle="Invitar y asignar equipos" cifra={estado.usuarios.filter((u) => u.rol === 'entrenador').length} />
+              <Item vista="panel-actividad" titulo="Historial de actividad" detalle="Quién hizo qué y cuándo" />
               <Item vista="panel-rosarina" titulo="Datos de la Rosarina" detalle="Revisar y aprobar antes de publicar" cifra={estado.sugerencias.length} />
               <Item vista="panel-playoffs" titulo="Playoffs" detalle="Subir la planilla de la Asociación" cifra={(estado.programacion || []).filter((f) => f.tipo === 'partido').length} />
               <Item vista="panel-tablas" titulo="Tablas de posiciones" detalle="Copiar de la web de la Rosarina" cifra={(estado.tablas || []).length} />
@@ -144,13 +145,18 @@ export function PanelEntrenadores() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
                       <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                         <span style={{ fontWeight: 600 }}>{u.nombre}</span>
-                        <span className="mini suave" style={{ overflowWrap: 'anywhere' }}>{u.email}{u.pendiente ? ' · Invitación pendiente' : ''}</span>
+                        <span className="mini suave" style={{ overflowWrap: 'anywhere' }}>{u.email}{u.pendiente ? ' · Invitación pendiente' : ''}{u.activo === false ? ' · Desactivado' : ''}</span>
                       </span>
                       <button type="button" className="link-btn" onClick={() => setEditando(editando === u.id ? null : u.id)}>{editando === u.id ? 'Listo' : 'Editar'}</button>
                     </div>
                     {editando === u.id ? (
                       <>
                         <SelectorEquipos prefijo={`ed-${u.id}`} seleccion={u.equipos} onCambio={(eq) => ejecutar('entrenador/equipos', { usuarioId: u.id, equipos: eq })} />
+                        {!u.pendiente ? (
+                          <button type="button" className="btn btn-secundario" onClick={() => { if (ejecutar('entrenador/activo', { usuarioId: u.id, activo: u.activo === false })) mostrarToast(u.activo === false ? 'Acceso reactivado.' : 'Acceso desactivado. Puede volver a activarlo cuando quieras.') }}>
+                            {u.activo === false ? 'Reactivar acceso' : 'Desactivar acceso (sin borrar nada)'}
+                          </button>
+                        ) : null}
                         {quitando === u.id ? (
                           <div className="grilla-2">
                             <button type="button" className="btn btn-secundario" onClick={() => setQuitando(null)}>Cancelar</button>
@@ -324,6 +330,43 @@ export function PanelAviso() {
           </section>
         ) : null}
       </main>
+      <NavPanel actual="panel-mas" />
+    </>
+  )
+}
+
+const ETIQUETA_ACCION = {
+  usuario_alta: 'Cuenta creada',
+  usuario_baja: 'Acceso quitado',
+  usuario_activado: 'Acceso reactivado',
+  usuario_desactivado: 'Acceso desactivado',
+  usuario_equipos: 'Equipos asignados',
+  invitacion: 'Invitación',
+  invitacion_quitada: 'Invitación quitada',
+}
+
+export function PanelActividad() {
+  const { estado } = useApp()
+  const filas = estado.actividad || []
+  return (
+    <>
+      <EncabezadoPanel titulo="Historial de actividad" volverA="panel-mas" />
+      <SoloAdmin>
+        <main className="contenido g">
+          <p className="chico suave" style={{ margin: 0 }}>Se registra solo, desde la base de datos. Nadie puede editarlo ni borrarlo desde la app. Se muestran los últimos 100 movimientos.</p>
+          {filas.length === 0 ? <div className="tarjeta vacio">Todavía no hay movimientos.</div> : (
+            <div className="lista">
+              {filas.map((f) => (
+                <div key={f.id} style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontWeight: 600 }}>{ETIQUETA_ACCION[f.accion] || f.accion}</span>
+                  <span className="mini" style={{ overflowWrap: 'anywhere' }}>{f.detalle}</span>
+                  <span className="mini suave">{f.quien} · {new Date(f.creado).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </SoloAdmin>
       <NavPanel actual="panel-mas" />
     </>
   )
